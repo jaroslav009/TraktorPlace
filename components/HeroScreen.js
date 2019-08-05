@@ -1,0 +1,92 @@
+import React, {Component} from 'react';
+import { Text, View, Image, ImageBackground, StyleSheet, Dimensions, Linking, TouchableOpacity } from 'react-native';
+
+import HeroLogo from '../assets/images/LogoHero.png';
+import fonHero from '../assets/images/fonHero.png';
+import google from '../assets/images/googlePlus.png'
+import vk from '../assets/images/vk.png'
+import facebook from '../assets/images/facebook.png'
+// Font 
+import Fonts from '../constants/Fonts';
+// Font
+
+class HeroScreen extends Component {
+    constructor(props) {
+        super(props);
+    }
+    // _linkTo(link) {
+    //     Linking.openURL(link);
+    //     this.props.onPress && this.props.onPress();
+    // }
+    render() {
+        return (
+            <ImageBackground source={fonHero} style={{width: '100%', height: '100%'}}>
+                <View style={styles.wrapperHero}>
+                    <Image source={HeroLogo} style={{ marginTop: (Dimensions.get('window').height * 20)/100 }} />
+                    <View style={styles.containerSign}>
+                        <Text style={{ color: '#fff', fontSize: 18, fontFamily: 'TTCommons-Thin' }} onPress={() => this.props.navigation.navigate('Login')}>Войти</Text>
+                        <View style={styles.registrationText}>
+                            <Text style={{ color: '#fff', fontSize: 18, fontFamily: 'TTCommons-Thin' }} onPress={() => this.props.navigation.navigate('Register')}>Регистрация</Text>
+                        </View>
+                        <View style={styles.socIcon}>
+                            <TouchableOpacity style={styles.wrapperIcon}>
+                                <Image source={google} />
+                            </TouchableOpacity>
+                            <View style={styles.wrapperIcon}>
+                                <Image source={vk} />
+                            </View>
+                            <View style={styles.wrapperIcon}>
+                                <Image source={facebook} />
+                            </View>
+                            
+                        </View>
+                    </View>
+                    
+
+                </View>
+                
+            </ImageBackground>
+        );
+    }
+  
+}
+
+const styles = StyleSheet.create({
+    wrapperHero: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        height: Dimensions.get('window').height,
+        justifyContent: 'space-between'
+    },
+    registrationText: {
+        borderWidth: 1,
+        borderColor: '#3BD88D',
+        padding: 10,
+        borderRadius: 50,
+        marginTop: 10,
+        paddingLeft: 30,
+        paddingRight: 30,
+        marginTop: 18
+    },
+    containerSign: {
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    socIcon: {
+        marginTop: 18,
+        flexDirection: 'row'
+    },
+    wrapperIcon: {
+        marginRight: 10,
+        borderWidth: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 100,
+        backgroundColor: '#3BD88D',
+        width: 39,
+        height: 39
+    }
+})
+
+export default HeroScreen
