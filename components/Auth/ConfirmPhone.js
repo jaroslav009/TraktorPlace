@@ -1,14 +1,9 @@
 import React, {Component} from 'react';
 import { Text, View, Image, ImageBackground, StyleSheet, Dimensions, TouchableOpacity, TextInput, ScrollView } from 'react-native';
 import * as Font from 'expo-font';
-import * as firebase from 'react-native-firebase';
 
 // Font 
 import Fonts from '../../constants/Fonts';
-Font.loadAsync({
-    'TTCommons-Regular': require('../../assets/fonts/TTCommons-Regular.ttf'),
-    'TTCommons-Thin': require('../../assets/fonts/TTCommons-Thin.ttf'),
-});
 // Font
 
 // Image
@@ -26,36 +21,10 @@ class ConfirmPhone extends Component {
     }
 
     componentDidMount() {
-        const { navigation } = this.props;
-        firebase.database().ref('users/').on('value', (snapshot) => {
-            console.log(snapshot);
+        Font.loadAsync({
+            'TTCommons-Regular': require('../../assets/fonts/TTCommons-Regular.ttf'),
+            'TTCommons-Thin': require('../../assets/fonts/TTCommons-Thin.ttf'),
         });
-        // console.log(navigation.getParam('name', undefined), navigation.getParam('surname', undefined));
-
-        let phoneNumber = '+380964252058';
-        // var appVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container');
-        this.setState({ message: 'Sending code ...' });
-
-        firebase.auth().signInWithPhoneNumber(phoneNumber, true)
-        .then(confirmResult => this.setState({ confirmResult, message: 'Code has been sent!' }))
-        .catch(error => this.setState({ message: `Sign In With Phone Number Error: ${error.message}` }));
-        // firebase.auth().signInWithPhoneNumber(phoneNumber)
-        //     .then((confirmResult) => {
-        //     // This means that the SMS has been sent to the user
-        //     // You need to:
-        //     //   1) Save the `confirmResult` object to use later
-        //     console.log('cnfirm', confirmResult);
-
-        //     this.setState({ confirmResult });
-        //     //   2) Hide the phone number form
-        //     //   3) Show the verification code form
-        //     })
-        //     .catch((error) => {
-        //     const { code, message } = error;
-        //     // For details of error codes, see the docs
-        //     // The message contains the default Firebase string
-        //     // representation of the error
-        //     });
     }
 
     signUp() {

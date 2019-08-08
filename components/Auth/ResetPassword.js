@@ -18,63 +18,31 @@ import logoReg from '../../assets/images/logoReg.png';
 
 import validateEmail from '../../functions/validateEmail';
 
-class Register extends Component {
+class ResetPassword extends Component {
     constructor(props) {
         super(props);
         this.state = {
             email: '',
             errEmail: false,
-            password: '',
-            errPass: false,
-            load: false,
-            errUser: false
+            load: false
         }
         this.signIn = this.signIn.bind(this);
     }
 
     signIn() {
-        console.log('this.state.', this.state.password)
-        console.log('this.email.', this.state.password.length)
         this.setState({ load: true });
         if(validateEmail(this.state.email) == false) {
             return this.setState({ errEmail: true });
         } else {
             this.setState({ errEmail: false });
         }
-        if(this.state.password.length < 6) {
-            return this.setState({ errPass: true });
-        } else {
-            this.setState({ errPass: false });
-        }
-        firebase.auth().signInWithEmailAndPassword(this.state.email, this.state.password)
-        .then(() => {
-            firebase.auth().onAuthStateChanged(async (user) => {
-                if(user){
-                    console.log('user logged', user.emailVerified);
-                    if(user.emailVerified == true) {
-                        this.props.navigation.navigate('MainClient');
-                    } else {
-                        // await firebase.auth().signOut();
-                        this.setState({ errVerifyEmail: true, authentication: false, authErr: false });
-                        this.setState({ load: false });
-                        return Alert.alert(
-                            '',
-                            'Подтвердите емеил',
-                            [
-                              {text: 'OK', onPress: () => console.log('OK Pressed')},
-                            ],
-                            {cancelable: false},
-                        );
-                        
-                    }
-                    
-                }
-            })
-        })
-        .catch((err) => {
-            console.log('err', err);
-            this.setState({ load: false, errUser: true });
-        })
+        firebase.auth().sendPasswordResetEmail(this.state.email)
+        .then((user) => {
+            alert('Проверьте пошту');
+        }).catch((e) => {
+            alert('Такого пользователя не существует');
+        });
+        this.props.navigation.navigate('Login');
     }
 
     render() {
@@ -97,11 +65,8 @@ class Register extends Component {
                         <Image source={logoReg} style={{ width: 238, height: 54 }} />
                     </View>
                     <View style={styles.containerForm}>
-                        <View>
-                        <Text style={[styles.errText, {opacity: this.state.errUser == true ? 1 : 0, width: 238}]}>Почта или пароль неверны</Text>
-                        </View>
                         <View style={{ marginTop: 10 }}> 
-                            <Text style={[styles.errText, {opacity: this.state.errEmail == true ? 1 : 0}]}>Введите ваш емеил</Text>
+                            <Text style={[styles.errText, {opacity: this.state.errEmail == true ? 1 : 0}]}>Введите ваш почта</Text>
                             <Text style={[
                                 styles.label,
                                 {
@@ -117,26 +82,6 @@ class Register extends Component {
                             }}
                             />
                         </View>
-                        <View style={{ marginTop: 10 }}> 
-                            <Text style={[styles.errText, {opacity: this.state.errPass == true ? 1 : 0, width:  238}]}>Пароль должен быть не менее 6 символов</Text>
-                            <Text style={[
-                                styles.label,
-                                {
-                                    opacity: this.state.password == '' ? 0 : 1
-                                }
-                            ]}>
-                                Пароль
-                            </Text>
-                            <TextInput secureTextEntry={true} placeholder="Пароль" style={styles.itemForm} 
-                            onChange={(text) => { 
-                                console.log('text', text.nativeEvent.text)
-                                console.log('length', text.nativeEvent.text.length)
-                                let e = false;
-                                if(text.nativeEvent.text.length < 6) e = true
-                                this.setState({ password: text.nativeEvent.text, errPass: e });
-                            }}
-                            />
-                        </View>
                     </View>
                     <View style={{ 
                         width: Dimensions.get('window').width, 
@@ -144,7 +89,7 @@ class Register extends Component {
                         top: 0,
                     }}>
                         <TouchableOpacity style={styles.btn} onPress={this.signIn}>
-                            <Text style={{color: '#fff'}}>Войти</Text>
+                            <Text style={{color: '#fff'}}>Отправить код</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -178,7 +123,7 @@ const styles = StyleSheet.create({
         borderRadius: 27.5,
         // fontFamily: 'TTCommons-Regular',
         fontSize: 18,
-        marginBottom: 10,
+        marginBottom: 30,
         elevation: 2
         // bottom: 30,
         // position: 'absolute'
@@ -195,4 +140,4 @@ const styles = StyleSheet.create({
     }
 })
 
-export default Register
+export default ResetPassword

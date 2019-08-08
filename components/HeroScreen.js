@@ -1,24 +1,42 @@
 import React, {Component} from 'react';
 import { Text, View, Image, ImageBackground, StyleSheet, Dimensions, Linking, TouchableOpacity } from 'react-native';
+import * as firebase from 'firebase';
 
+// Image
 import HeroLogo from '../assets/images/LogoHero.png';
 import fonHero from '../assets/images/fonHero.png';
 import google from '../assets/images/googlePlus.png'
 import vk from '../assets/images/vk.png'
 import facebook from '../assets/images/facebook.png'
+// Image
+
 // Font 
 import Fonts from '../constants/Fonts';
 // Font
 
+import LoadIndicator from '../constants/LoadIndicator';
+
 class HeroScreen extends Component {
     constructor(props) {
         super(props);
+        this.state = {
+            load: true,
+        }
     }
-    // _linkTo(link) {
-    //     Linking.openURL(link);
-    //     this.props.onPress && this.props.onPress();
-    // }
+    async componentDidMount() {
+        await firebase.auth().onAuthStateChanged(async (user) => {
+            if(user){
+                if(user.emailVerified == true) {
+                    this.props.navigation.navigate('MainClient');
+                }
+            }
+        })
+        this.setState({ load: false });
+    }
     render() {
+        if(this.state.load == true) {
+            return <LoadIndicator />
+        }
         return (
             <ImageBackground source={fonHero} style={{width: '100%', height: '100%'}}>
                 <View style={styles.wrapperHero}>

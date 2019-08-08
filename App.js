@@ -12,7 +12,9 @@ const firebaseConfig = {
   authDomain: "traktorplace-1565009856384.firebaseapp.com",
   databaseURL: "https://traktorplace-1565009856384.firebaseio.com",
   projectId: "traktorplace-1565009856384",
-  storageBucket: ""
+  storageBucket: "traktorplace-1565009856384.appspot.com",
+  messagingSenderId: "923969830123",
+  appId: "1:923969830123:android:f6cf897bf5c804c4"
 };
 
 firebase.initializeApp(firebaseConfig);
