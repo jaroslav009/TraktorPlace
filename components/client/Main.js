@@ -1,15 +1,13 @@
 import React, {Component} from 'react';
-import { Text, View, Image, Dimensions, TouchableOpacity, TextInput, Animated, Easing, Platform } from 'react-native';
+import { Text, View, Image, Dimensions, TouchableOpacity, TextInput, Animated, Easing, ScrollView } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as Permissions from 'expo-permissions';
 import * as Location from 'expo-location';
 import * as firebase from 'firebase';
 import { CheckBox } from 'react-native-elements'
-import haversine from 'haversine';
+import { Avatar } from 'react-native-elements';
 
 import Fonts from '../../constants/Fonts';
-import Driver from '../Driver/Driver';
-import Select from '../Basic/Select';
 import LoadIndicator from '../../constants/LoadIndicator';
 
 import downArrow from '../../assets/images/down-arrow.png';
@@ -314,48 +312,100 @@ class MainClient extends Component {
                         this.state.drivers.map((value, key) => {
                             name = 'openDrive'+count;
                             count++;
-                            return <MapView.Marker.Animated
-                                key={key}
-                                coordinate={
-                                    new MapView.AnimatedRegion({
-                                        latitude: value.latitude,
-                                        longitude: value.longitude,
-                                        latitudeDelta: 0.045,
-                                        longitudeDelta: 0.045
-                                    })
-                                }
-                                anchor={{ x: 0.35, y: 0.32 }}
-                                ref={marker => { this.marker = marker }}
-                                styles={{ width: 50, height: 50 }}
-                                onPress={() => {
-                                   
+                            return <TouchableOpacity style={{ 
+                                width: Dimensions.get('window').width, 
+                                height: Dimensions.get('window').height,
+                                position: 'absolute' }}
+                                key={key}>
+                            <MapView.Marker.Animated
+                                    coordinate={
+                                        new MapView.AnimatedRegion({
+                                            latitude: value.latitude,
+                                            longitude: value.longitude,
+                                            latitudeDelta: 0.045,
+                                            longitudeDelta: 0.045
+                                        })
+                                    }
+                                    anchor={{ x: 0.35, y: 0.32 }}
+                                    ref={marker => { this.marker = marker }}
+                                    styles={{ 
+                                        width: 600, 
+                                        height: 600,
+                                        position: 'absolute' }}
+                                    onPress={() => {
+                                        this.setState({ [name]: !this.state[name] });
+                                        console.log(this.state[name]);
+                                    }}
+                                >
+                                    <TouchableOpacity style={{
+                                        height: 12,
+                                        width: 12,
+                                        borderRadius: 50,
+                                        backgroundColor: '#1C1C1C',
+                                        position: 'absolute',
+                                        zIndex: 123123123123
+                                    }}
+                                    ></TouchableOpacity>
                                     
-                                    this.setState({ [name]: !this.state[name] });
-                                    console.log(this.state[name]);
-                                }}
-                            >
-                                <View style={[styles.dataDriver,
-                                   {
-                                       position: this.state[name] == true ? 'absolute' : 'relative',
-                                       display: this.state[name] == true ? 'flex' : 'none'
-                                   }
-
-                                ]}>
-                                    <Text>1</Text>
-                                </View>
-                                <TouchableOpacity style={{
-                                    height: 32,
-                                    width: 32,
-                                    borderRadius: 50,
-                                    backgroundColor: '#1C1C1C',
-                                    position: 'absolute',
-                                    zIndex: 123123123123
-                                }}
-                                ></TouchableOpacity>
-                            </MapView.Marker.Animated>
+                                    
+                                </MapView.Marker.Animated>
+                                
+                            </TouchableOpacity>
                         })
                     }
                     
+                    {
+                        this.state.drivers.map((value, key) => {
+                            name = 'openDrive'+count;
+                            count++;
+                            return <MapView.Marker.Animated 
+                            coordinate={
+                                new MapView.AnimatedRegion({
+                                    latitude: value.latitude+0.0001,
+                                    longitude: value.longitude,
+                                    latitudeDelta: 0.045,
+                                    longitudeDelta: 0.045
+                                })
+                            }
+                            anchor={{ x: 0.35, y: 0.32 }}
+                            ref={marker => { this.marker = marker }}
+                            styles={{ 
+                                width: 1000, 
+                                height: 1000,
+                                position: 'relative',
+                            right: -800 }}
+                            onPress={() => {
+                                this.setState({ [name]: !this.state[name] });
+                                console.log(this.state[name]);
+                            }}
+                            >
+                                <View style={[styles.dataDriver,
+                                {
+                                    position: 'absolute',
+                                    width: 1000,
+                                    height: 1000
+                                    //    TO DO
+                                    //    position: this.state[name] == true ? 'absolute' : 'relative',
+                                    //    display: this.state[name] == true ? 'flex' : 'none'
+                                    //    TO DO
+                                }
+
+                                ]}>
+                                    <View style={styles.topUser}>
+                                        {/* <Avatar rounded title="MD" /> */}
+                                            <Text style={{
+                                                color: '#333'
+                                            }}>Стаж <Text style={{
+                                                color: '#3BD88D'
+                                            }}>2 года</Text> </Text>
+                                            <Text>4.8</Text>
+                                    </View>
+                                </View>
+                            </MapView.Marker.Animated>
+
+                        })
+                    }
+
                 </MapView>
 
                 {/* Fon close modal */}
@@ -419,7 +469,8 @@ class MainClient extends Component {
                     top: this.state.modalData,
                     height: '100%'
                 }]}>
-                    <View style={{
+                    <ScrollView>
+                        <View style={{
                         justifyContent: 'center',
                         alignItems: 'center',
                         height: '100%'
@@ -543,6 +594,7 @@ class MainClient extends Component {
                                     flexDirection: 'row',
                                     justifyContent: 'space-between',
                                     alignItems: 'center',
+                                    zIndex: 100000000
                                 }}
                                 >
                                     <View>
@@ -608,7 +660,8 @@ class MainClient extends Component {
                         <TouchableOpacity style={styles.btn} onPress={this.dataBtn}>
                             <Text style={{color: '#fff'}}>Подтвердить</Text>
                         </TouchableOpacity>
-                    </View>
+                        </View>
+                    </ScrollView>
                 </Animated.View>
                 {/* Data */}
             </View>
@@ -733,8 +786,15 @@ const styles = {
     dataDriver: {
         backgroundColor: '#fff',
         borderRadius: 10,
-        width: Dimensions.get('window').width*0.8,
-
+        padding: 5,
+        width: Dimensions.get('window').width,
+        height: Dimensions.get('window').height
+    },
+    topUser: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        width: 1000
     }
 }
 
