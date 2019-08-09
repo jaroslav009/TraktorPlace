@@ -5,10 +5,10 @@ import * as Permissions from 'expo-permissions';
 import * as Location from 'expo-location';
 import * as firebase from 'firebase';
 import { CheckBox } from 'react-native-elements'
-import { Avatar } from 'react-native-elements';
+import * as Font from 'expo-font';
 
-import Fonts from '../../constants/Fonts';
 import LoadIndicator from '../../constants/LoadIndicator';
+import HeaderClient from './HeaderClient/HeaderClient';
 
 import downArrow from '../../assets/images/down-arrow.png';
 
@@ -59,16 +59,27 @@ class MainClient extends Component {
                     latitude: 1,
                     longitude: 23
                 }
-            ]
+            ],
+            clickHeader: false,
+            loadFont: false,
         }
         this.streetSelect = this.streetSelect.bind(this);
         this.closeStr = this.closeStr.bind(this);
         this.addressBtn = this.addressBtn.bind(this);
         this.dataSelect = this.dataSelect.bind(this);
         this.dataBtn = this.dataBtn.bind(this);
+        this.handleClickHeader = this.handleClickHeader.bind(this);
     }
     async componentDidMount() {
         console.log('anufe', this.state.modalStr.Value);
+        await Font.loadAsync({
+          'TTCommons-DemiBold': require('../../assets/fonts/TTCommons-DemiBold.ttf'),
+          'TTCommons-Regular': require('../../assets/fonts/TTCommons-Regular.ttf'),
+        })
+        .then(() => {
+            this.setState({ loadFont: true });
+        })  
+
         await firebase.auth().onAuthStateChanged((user) => {
             if(user) {
                 console.log('user', user.uid);
@@ -227,16 +238,25 @@ class MainClient extends Component {
         this.setState({ fonCloseStr: false });
     }
 
+    handleClickHeader = (value) => {
+        this.setState({clickHeader: value});
+    }
+
     render() {
         let text2 = '';
         let count = 0;
         let name = '';
         console.log('render', this.state.drivers[0].latitude);
-        if(this.state.load == true) {
+        if(this.state.load == true || this.state.loadFont == false) {
             return <LoadIndicator />
         }
         return (
             <View style={{flex: 1, height: '100%'}}>
+                <View>
+                <HeaderClient navigation={this.props.navigation} page="Dashboard" 
+                   click={this.handleClickHeader} 
+                   style={{ width: '100%', height: this.state.clickHeader == false ? 50 : '100%', position: 'absolute' }} />
+                </View>
                 {/* <Text>Location: {this.state.latitude} </Text> */}
                 <Text style={{
                     position: 'absolute',
@@ -296,58 +316,6 @@ class MainClient extends Component {
                                 </MapView.Marker.Animated>
                                 
                             </TouchableOpacity>
-                        })
-                    }
-                    
-                    {
-                        this.state.drivers.map((value, key) => {
-                            name = 'openDrive'+count;
-                            count++;
-                            return <MapView.Marker.Animated 
-                            coordinate={
-                                new MapView.AnimatedRegion({
-                                    latitude: value.latitude+0.0001,
-                                    longitude: value.longitude,
-                                    latitudeDelta: 0.045,
-                                    longitudeDelta: 0.045
-                                })
-                            }
-                            anchor={{ x: 0.35, y: 0.32 }}
-                            ref={marker => { this.marker = marker }}
-                            styles={{ 
-                                width: 1000, 
-                                height: 1000,
-                                position: 'relative',
-                            right: -800 }}
-                            onPress={() => {
-                                this.setState({ [name]: !this.state[name] });
-                                console.log(this.state[name]);
-                            }}
-                            >
-                                <View style={[styles.dataDriver,
-                                {
-                                    position: 'absolute',
-                                    width: 1000,
-                                    height: 1000
-                                    //    TO DO
-                                    //    position: this.state[name] == true ? 'absolute' : 'relative',
-                                    //    display: this.state[name] == true ? 'flex' : 'none'
-                                    //    TO DO
-                                }
-
-                                ]}>
-                                    <View style={styles.topUser}>
-                                        {/* <Avatar rounded title="MD" /> */}
-                                            <Text style={{
-                                                color: '#333'
-                                            }}>Стаж <Text style={{
-                                                color: '#3BD88D'
-                                            }}>2 года</Text> </Text>
-                                            <Text>4.8</Text>
-                                    </View>
-                                </View>
-                            </MapView.Marker.Animated>
-
                         })
                     }
 

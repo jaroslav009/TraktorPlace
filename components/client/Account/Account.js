@@ -15,6 +15,7 @@ class Account extends Component {
         super(props);
         this.state = {
             loadFont: false,
+            load: false,
             name: '',
             errName: false,
             surname: '',
@@ -23,21 +24,127 @@ class Account extends Component {
             errEmail: false,
             password: '',
             errPass: false,
-            checkedZap: false
+            checkedZap: false,
+            nameConf: '',
+            surnameConf: '',
+            emailConf: '',
+            phoneConf: '',
+            confPass: '',
         }
+        this.changeData = this.changeData.bind(this);
+        this.reauthenticate = this.reauthenticate.bind(this);
     }
     async componentDidMount() {
+        await firebase.auth().onAuthStateChanged(async (user) => {
+            if(user) {
+                console.log(`user ${user}`);
+                console.log(`email ${user.email}`);
+                firebase.database().ref("users").orderByChild("confEmail").equalTo(user.email).once("child_added", (snapshot) => {
+                    console.log('snapshot', snapshot.key);
+                    this.setState({ userKey: snapshot.key })
+                    firebase.database().ref("users/"+snapshot.key).on("value", (data) => {
+                        console.log('value', data.toJSON().name);
+                        this.setState({ 
+                            name: data.toJSON().name,
+                            surname: data.toJSON().surname,
+                            email: data.toJSON().email,
+                            nameConf: data.toJSON().name,
+                            surnameConf: data.toJSON().surname,
+                            emailConf: data.toJSON().email
+                        });
+                        console.log('name', this.state.name);
+                        console.log('surname', this.state.surname);
+                        this.setState({load: true});
+                        
+                    })
+                });
+            }
+        });
         await Font.loadAsync({
           'TTCommons-DemiBold': require('../../../assets/fonts/TTCommons-DemiBold.ttf'),
           'TTCommons-Regular': require('../../../assets/fonts/TTCommons-Regular.ttf'),
         })
         .then(() => {
             this.setState({ loadFont: true });
-        })
-        this.props.fontLoader();
+        });
     }
+
+    reauthenticate = (currentPassword) => {
+        var user = firebase.auth().currentUser;
+        var cred = firebase.auth.EmailAuthProvider.credential(
+            user.email, this.state.changePassword);
+        return user.reauthenticateWithCredential(cred);
+     }
+
+    async changeData(act) {
+        this.setState({ load: false });
+        if(act == 'name') {
+            if(this.state.name != '') {
+                await firebase.database().ref("users/" + this.state.userKey).update({
+                    name: this.state.name,
+                })
+                .then(() => {
+                    this.setState({load: true});
+                })
+            }
+        }
+        else if(act == 'surname') {
+            if(this.state.surname != '') {
+                await firebase.database().ref("users/" + this.state.userKey).update({
+                    surname: this.state.surname,
+                })
+                .then(() => {
+                    this.setState({load: true});
+                })
+            }
+        } 
+        else if(act == 'email') {
+            if(this.state.email != '') {
+                await firebase.database().ref("users/" + this.state.userKey).update({
+                    email: this.state.email,
+                })
+                .then(() => {
+                    this.setState({load: true});
+                })
+            }
+        }
+        else if(act == 'password') {
+            await this.reauthenticate(this.state.password)
+            .then(() => {
+                console.log('password change');
+                
+                var user = firebase.auth().currentUser;
+                user.updatePassword(this.state.password)
+                .then(() => {
+                    
+                    console.log("Password updated!");
+                    this.setState({
+                        errorNewPassword: true,
+                        render: false,
+                    });
+                    this.props.navigation.navigate('Login', { signOut: true });
+                })
+                .catch((error) => {
+                    this.setState({
+                        errorNewPassword: true,
+                    });
+                    console.log(error);
+                });
+            })
+            .catch((error) => {
+                this.setState({
+                    errorNewPassword: false,
+                    infiniteLoad: false,
+                })
+                console.log(error);
+            });
+        }
+
+        
+    }
+
     render() {
-        if(this.state.loadFont == true) {
+        if(this.state.loadFont == true && this.state.load == true) {
             return (
                 <ScrollView style={{
                     paddingBottom: 20
@@ -84,13 +191,18 @@ class Account extends Component {
                                     if(text.nativeEvent.text == '') e = true
                                     this.setState({ name: text.nativeEvent.text, errName: e });
                                 }}
+                                value={this.state.name}
                             />
                             <TouchableOpacity style={{
                                 position: 'absolute',
                                 right: 0,
                                 bottom: 5
-
-                            }}>
+                                
+                            }}
+                            onPress={() => {
+                                this.changeData('name');
+                            }}
+                            >
                                 <Image source={settingsWorkTool} />
                             </TouchableOpacity>
                         </View>
@@ -108,13 +220,18 @@ class Account extends Component {
                                 let e = false;
                                 if(text.nativeEvent.text == '') e = true
                                 this.setState({ surname: text.nativeEvent.text, errSurname: e });
-                            }} />
+                            }}
+                            value={this.state.surname} />
                             <TouchableOpacity style={{
                                 position: 'absolute',
                                 right: 0,
                                 bottom: 5
 
-                            }}>
+                            }}
+                            onPress={() => {
+                                this.changeData('surname');
+                            }}
+                            >
                                 <Image source={settingsWorkTool} />
                             </TouchableOpacity>
                         </View>
@@ -133,13 +250,18 @@ class Account extends Component {
                                 console.log('text', text.nativeEvent.text)
                                 this.setState({ email: text.nativeEvent.text });
                             }}
+                            value={this.state.email}
                             />
                             <TouchableOpacity style={{
                                 position: 'absolute',
                                 right: 0,
                                 bottom: 5
 
-                            }}>
+                            }}
+                            onPress={() => {
+                                this.changeData('email');
+                            }}
+                            >
                                 <Image source={settingsWorkTool} />
                             </TouchableOpacity>
                         </View>
@@ -151,9 +273,9 @@ class Account extends Component {
                                     opacity: this.state.password == '' ? 0 : 1
                                 }
                             ]}>
-                                Пароль
+                                Старый пароль
                             </Text>
-                            <TextInput secureTextEntry={true} placeholder="Пароль" style={styles.itemForm} 
+                            <TextInput secureTextEntry={true} placeholder="Старый пароль" style={styles.itemForm} 
                             onChange={(text) => { 
                                 console.log('text', text.nativeEvent.text)
                                 console.log('length', text.nativeEvent.text.length)
@@ -167,10 +289,33 @@ class Account extends Component {
                                 right: 0,
                                 bottom: 5
 
-                            }}>
+                            }}
+                            onPress={() => {
+                                this.changeData('password')
+                            }}
+                            >
                                 <Image source={settingsWorkTool} />
                             </TouchableOpacity>
                         </View>
+
+                        <View style={{ marginTop: 10 }}> 
+                            <Text style={[
+                                styles.label,
+                                {
+                                    opacity: this.state.confPass == '' ? 0 : 1
+                                }
+                            ]}>
+                                Новый пароль
+                            </Text>
+                            <TextInput secureTextEntry={true} placeholder="Новый пароль" style={styles.itemForm} 
+                            onChange={(text) => { 
+                                this.setState({ confPass: text.nativeEvent.text });
+                                console.log('confPass', this.state.confPass);
+                                
+                            }}
+                            />
+                        </View>
+
                         <View style={{
                             flexDirection: 'row',
                             justifyContent: 'space-between',
@@ -195,7 +340,7 @@ class Account extends Component {
                             
                             this.props.navigation.navigate('Logout1');
                         }}>
-                            <Text style={{color: '#fff', fontFamily: 'TTCommons-Regular',}}>Выход</Text>
+                            <Text style={{color: '#fff', fontFamily: 'TTCommons-DemiBold', fontSize: 18}}>Выход</Text>
                         </TouchableOpacity>
                     </View>
 

@@ -91,7 +91,9 @@ class Register extends Component {
                     surname: this.state.surname,
                     email: this.state.email,
                     phone: this.state.phone,
-                    role: 'user'
+                    role: 'user',
+                    confEmail: this.state.email,
+                    avatar: '',
                 }, function(error) {
                     if (error) {
                         console.log('err', error);
