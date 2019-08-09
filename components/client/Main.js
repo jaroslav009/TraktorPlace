@@ -96,62 +96,7 @@ class MainClient extends Component {
             console.log(this.state.drivers);
             
 
-        });
-
-        // setInterval(() => {
-        //     console.log('setINtw', this.state.uid);
-            
-        //     firebase.database().ref('positionDriver/' + this.state.uid).set({
-        //         latitude: this.state.latitude+0.1,
-        //         longitude: this.state.longitude+0.1,
-        //         latitudeDelta: 0.0922,
-        //         longitudeDelta: 0.0421
-        //       }, function(error) {
-        //         if (error) {
-        //             console.log('err', error);
-        //         } else {
-        //             console.log('Data saved positon');
-        //         }
-        //     });
-        //     this.setState({ latitude: this.state.latitude+0.1, longitude: this.state.longitude+0.1 })
-        // }, 10000);
-        
-
-        // this.watchID = navigator.geolocation.watchPosition(
-        //     position => {
-        //       const { coordinate, distanceTravelled } =   this.state;
-        //       const { latitude, longitude } = position.coords;
-              
-        //       const newCoordinate = {
-        //         latitude,
-        //         longitude
-        //       };
-        //       if (Platform.OS === "android") {
-        //         if (this.marker) {
-        //           this.marker._component.animateMarkerToCoordinate(
-        //             newCoordinate,
-        //             500
-        //           );
-        //          }
-        //        } else {
-        //          coordinate.timing(newCoordinate).start();
-        //        }
-        //        console.log(`Change location
-        //                     latitude ${latitude}
-        //                     longitude ${longitude}`);
-
-        //        this.setState({
-        //            location: {
-        //                 latitude,
-        //                 longitude,
-        //            }
-                 
-        //        });
-        //      },
-        //      error => console.log(error),
-        //      { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
-        // );
-        
+        });        
         this.setState({ load: false });
     }
     _getLocationAsync = async () => {
