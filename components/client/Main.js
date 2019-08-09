@@ -6,9 +6,8 @@ import * as Location from 'expo-location';
 
 import Fonts from '../../constants/Fonts';
 
-import MapView, { Marker } from 'react-native-maps';
+import MapView from 'react-native-maps';
 import Driver from '../Driver/Driver';
-import { thisExpression } from '@babel/types';
 
 class MainClient extends Component {
     constructor(props) {
