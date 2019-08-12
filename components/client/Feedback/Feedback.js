@@ -4,8 +4,6 @@ import Back from '../../Back';
 import * as Font from 'expo-font';
 import { Avatar, Rating } from 'react-native-elements';
 
-import star from '../../../assets/images/star.png';
-
 class Feedback extends PureComponent {
     constructor(props) {
         super(props);
@@ -44,7 +42,7 @@ class Feedback extends PureComponent {
 
             return (
                 <ScrollView>
-                    <Back />
+                    <Back nav={this.props.navigation} />
                     <View style={{
                         justifyContent: 'center',
                         alignItems: 'center',

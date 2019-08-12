@@ -4,7 +4,7 @@ import * as firebase from 'firebase';
 
 import burger from '../../../assets/images/burger.png'
 
-export default class HeaderClient extends Component {
+export default class MechanicHeader extends Component {
 
     constructor(props) {
         super(props);
@@ -15,8 +15,6 @@ export default class HeaderClient extends Component {
             fadeAnim: new Animated.Value(-500),
             opacBack: new Animated.Value(0),
             dataUser: {},
-            phone: '',
-            // answeUser: '0'
         }
         this._openMenu = this._openMenu.bind(this);
         this._closeMenu = this._closeMenu.bind(this);
@@ -28,8 +26,7 @@ export default class HeaderClient extends Component {
                 firebase.database().ref("users").orderByChild("confEmail").equalTo(user.email).once("child_added", (snapshot) => {
                     this.setState({ userKey: snapshot.key })
                     firebase.database().ref("users/"+snapshot.key).on("value", (data) => {
-                        console.log('value phone', data);
-                        console.log('value phone2', data.toJSON().phone);
+                        console.log('value', data.toJSON().name);
                         this.setState({ 
                             phone: data.toJSON().phone
                         });
@@ -131,7 +128,7 @@ export default class HeaderClient extends Component {
                                             zIndex: 100000,
                                         }}
                                         onPress={() => {
-                                            this.props.navigation.navigate('Account')
+                                            this.props.navigation.navigate('AccountMechanic')
                                         }}
                                         >
                                         <Text style={[styles.darkText, 
@@ -143,13 +140,13 @@ export default class HeaderClient extends Component {
 
                                     <TouchableHighlight underlayColor="#fff" style={{zIndex: 100000}}
                                     onPress={() => {
-                                        this.props.navigation.navigate('MyZakaz')
+                                        this.props.navigation.navigate('MyJobs')
                                     }}
                                     >
                                         <Text style={[styles.darkText, {
                                             fontSize: 17,
                                             marginTop: 20,
-                                            }]}>Мои заказы</Text>
+                                            }]}>Моя работа</Text>
                                     </TouchableHighlight>
 
                                     <TouchableHighlight underlayColor="#fff" style={{zIndex: 100000}} onPress={() => {

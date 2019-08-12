@@ -1,14 +1,19 @@
 import React, {Component} from 'react';
-import { Text, View, Image, Dimensions, TouchableOpacity, TextInput, StyleSheet, ScrollView } from 'react-native';
+import { Text, View, Image, Dimensions, TouchableOpacity, TextInput, StyleSheet, ScrollView, Alert } from 'react-native';
 import * as Font from 'expo-font';
 import { Avatar, CheckBox } from 'react-native-elements';
 import * as firebase from 'firebase';
+import * as ImagePicker from 'expo-image-picker';
 
 import Back from '../../Back';
+import LoadIndicator from '../../../constants/LoadIndicator';
+import SuccessPopUp from '../../SuccessPopUp/SuccessPopUp';
 
 // Image
 import settingsWorkTool from '../../../assets/images/settings-work-tool.png';
 // Image
+
+import makeid from '../../../functions/makeId';
 
 class Account extends Component {
     constructor(props) {
@@ -30,9 +35,11 @@ class Account extends Component {
             emailConf: '',
             phoneConf: '',
             confPass: '',
+            popSuccess: false
         }
         this.changeData = this.changeData.bind(this);
-        this.reauthenticate = this.reauthenticate.bind(this);
+        this.changePassword = this.changePassword.bind(this);
+        this.changeAvatar = this.changeAvatar.bind(this);
     }
     async componentDidMount() {
         await firebase.auth().onAuthStateChanged(async (user) => {
@@ -50,12 +57,12 @@ class Account extends Component {
                             email: data.toJSON().email,
                             nameConf: data.toJSON().name,
                             surnameConf: data.toJSON().surname,
-                            emailConf: data.toJSON().email
+                            emailConf: data.toJSON().email,
+                            avatar: data.toJSON().avatar,
                         });
                         console.log('name', this.state.name);
                         console.log('surname', this.state.surname);
                         this.setState({load: true});
-                        
                     })
                 });
             }
@@ -63,21 +70,29 @@ class Account extends Component {
         await Font.loadAsync({
           'TTCommons-DemiBold': require('../../../assets/fonts/TTCommons-DemiBold.ttf'),
           'TTCommons-Regular': require('../../../assets/fonts/TTCommons-Regular.ttf'),
+          'TTCommons-Bold': require('../../../assets/fonts/TTCommons-Bold.ttf'),
         })
         .then(() => {
             this.setState({ loadFont: true });
         });
     }
 
-    reauthenticate = (currentPassword) => {
-        var user = firebase.auth().currentUser;
-        var cred = firebase.auth.EmailAuthProvider.credential(
-            user.email, this.state.changePassword);
-        return user.reauthenticateWithCredential(cred);
-     }
+    changePassword = () => {
+        this.setState({ load: false });
+        firebase.auth().sendPasswordResetEmail(this.state.email)
+        .then(() => {
+            Alert.alert("Пароль был выслан вам на почту");
+            this.props.navigation.navigate('Login');
+            this.setState({ load: true });
+        }, (error) => {
+            console.log('error', error);
+            Alert.alert("Ошбика");
+            this.setState({ load: true });
+        });
+    }
 
     async changeData(act) {
-        this.setState({ load: false });
+        this.setState({ load: false, popSuccess: true });
         if(act == 'name') {
             if(this.state.name != '') {
                 await firebase.database().ref("users/" + this.state.userKey).update({
@@ -122,6 +137,7 @@ class Account extends Component {
                         errorNewPassword: true,
                         render: false,
                     });
+                    
                     this.props.navigation.navigate('Login', { signOut: true });
                 })
                 .catch((error) => {
@@ -138,9 +154,54 @@ class Account extends Component {
                 })
                 console.log(error);
             });
+           
         }
-
+        setTimeout(() => {
+            this.setState({ popSuccess: false })
+        }, 2000)
         
+    }
+
+    async changeAvatar() {
+        let result = await ImagePicker.launchImageLibraryAsync();
+        console.log('result', result);
+        this.setState({ load: false });
+        if(!result.canceled) {
+            console.log('result.uri', result.uri);
+            let idAva = makeid(20);
+            this.uploadImage(result.uri, idAva)
+            .then(() => {
+                this.setState({ load: true });
+            })
+            .catch((err) => {
+                console.log('err', err);
+                Alert.alert('Ошибка');
+                this.setState({ load: true });
+            });
+        }
+    }
+
+    async uploadImage(uri, imageName) {
+        const response = await fetch(uri);
+        const blob = await response.blob();
+        let ref = firebase.storage().ref('avatar').child(imageName);
+        await ref.put(blob)
+        .then((res) => {
+            console.log('res', res);
+        });
+
+        await ref.getDownloadURL().then((url) => {
+            console.log('url', url)
+            this.setState({ avatar: url });
+        })
+
+        return await firebase.database().ref("users/" + this.state.userKey).update({
+            avatar: this.state.avatar,
+        })
+        .then(() => {
+            console.log('avatar cahnge!!!');
+            
+        })
     }
 
     render() {
@@ -155,24 +216,49 @@ class Account extends Component {
                         paddingBottom: 20
                     }}>
                         <Back nav={this.props.navigation} />
+
+                        {/* Success */}
+                        <View style={{
+                            position: this.state.popSuccess == false ? 'relative' : 'absolute',
+                            display: this.state.popSuccess == false ? 'none' : 'flex',
+                            right: 0,
+                            top: 50
+                        }}>
+                            <SuccessPopUp text="Обновлено" color="#EBEBEB" />
+                        </View>
+                        {/* Success */}
+
                         <Text style={{
                             fontFamily: 'TTCommons-DemiBold',
                             fontSize: 20,
                             marginLeft: 30
                         }}>Аккаунт</Text>
                     </View>
-                    <View style={{
+                    <TouchableOpacity  onPress={() => {
+                            this.changeAvatar();
+                        }} style={{
                         justifyContent: 'center',
                         alignItems: 'center'
                     }}>
-                        <Avatar rounded title="TP" size="xlarge" />
+                        {
+                            this.state.avatar == '' ? <Avatar rounded title="TP" size="xlarge" /> : <Avatar
+                                rounded
+                                size="xlarge"
+                                source={{
+                                uri:
+                                    this.state.avatar,
+                                }}
+                            />
+                        }
+                        
                         <Text style={{
                             fontFamily: 'TTCommons-Regular',
                             fontSize: 16,
                             color: '#DBDBDB',
                             marginTop: 8
-                        }}>Сменить фото</Text>
-                    </View>
+                        }}
+                        >Сменить фото</Text>
+                    </TouchableOpacity>
                     <View style={styles.wrapperForm}>
                         <View style={{ marginTop: 30 }}> 
                             <Text style={[styles.errText, {opacity: this.state.errName == true ? 1 : 0}]}>Введите имя</Text>
@@ -273,9 +359,9 @@ class Account extends Component {
                                     opacity: this.state.password == '' ? 0 : 1
                                 }
                             ]}>
-                                Старый пароль
+                                Пароль
                             </Text>
-                            <TextInput secureTextEntry={true} placeholder="Старый пароль" style={styles.itemForm} 
+                            <TextInput secureTextEntry={true} placeholder="Пароль" style={styles.itemForm} 
                             onChange={(text) => { 
                                 console.log('text', text.nativeEvent.text)
                                 console.log('length', text.nativeEvent.text.length)
@@ -291,29 +377,11 @@ class Account extends Component {
 
                             }}
                             onPress={() => {
-                                this.changeData('password')
+                                this.changePassword();
                             }}
                             >
                                 <Image source={settingsWorkTool} />
                             </TouchableOpacity>
-                        </View>
-
-                        <View style={{ marginTop: 10 }}> 
-                            <Text style={[
-                                styles.label,
-                                {
-                                    opacity: this.state.confPass == '' ? 0 : 1
-                                }
-                            ]}>
-                                Новый пароль
-                            </Text>
-                            <TextInput secureTextEntry={true} placeholder="Новый пароль" style={styles.itemForm} 
-                            onChange={(text) => { 
-                                this.setState({ confPass: text.nativeEvent.text });
-                                console.log('confPass', this.state.confPass);
-                                
-                            }}
-                            />
                         </View>
 
                         <View style={{
@@ -350,7 +418,7 @@ class Account extends Component {
             )
         }
         else {
-            return <View></View>
+            return <LoadIndicator />
         }
     }
 }
