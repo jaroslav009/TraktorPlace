@@ -1,6 +1,7 @@
 import React, {PureComponent} from 'react';
 import { Text, View, ScrollView, Dimensions, TouchableOpacity, TextInput } from 'react-native';
 import * as Font from 'expo-font';
+import * as firebase from 'firebase';
 
 import Back from '../../Back';
 
@@ -13,14 +14,22 @@ class cancelJob extends PureComponent {
     }
 
     async componentDidMount() {
+
+        const { navigation } = this.props;
+
+        console.log(navigation.getParam('id'));
+        
+        firebase.database().ref("zakaz/"+navigation.getParam('id')).remove();
+
         await Font.loadAsync({
           'TTCommons-DemiBold': require('../../../assets/fonts/TTCommons-DemiBold.ttf'),
           'TTCommons-Regular': require('../../../assets/fonts/TTCommons-Regular.ttf'),
         })
         .then(() => {
+            console.log('font');
+            
             this.setState({ loadFont: true });
         })
-        this.props.fontLoader();
     }
     render() {
         if(this.state.loadFont == true) {
@@ -82,7 +91,7 @@ class cancelJob extends PureComponent {
                             marginBottom: 20
                         }} onPress={() => {
                             
-                            this.props.navigation.navigate('successZakaz');
+                            this.props.navigation.navigate('cancelZakaz');
                         }}>
                             <Text style={{color: '#fff', fontFamily: 'TTCommons-DemiBold', fontSize: 18}}>Подтвердить</Text>
                         </TouchableOpacity>

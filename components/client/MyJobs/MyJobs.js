@@ -4,6 +4,8 @@ import * as Font from 'expo-font';
 import { Avatar } from 'react-native-elements';
 import * as firebase from 'firebase';
 
+import LoadIndicator from '../../../constants/LoadIndicator';
+
 import Arrow from '../../../assets/images/left-arrow.png';
 
 class MyJobs extends Component {
@@ -11,11 +13,63 @@ class MyJobs extends Component {
         super(props);
         this.state = {
             loadFont: false,
+            load: false,
+            jobs: [],
         }
     }
     async componentDidMount() {
         console.log('width', Dimensions.get('window').width);
-        
+
+        await firebase.auth().onAuthStateChanged(async (user) => {
+            if(user) {
+                console.log(`user ${user}`);
+                console.log(`email ${user.email}`);
+                firebase.database().ref("users").orderByChild("confEmail").equalTo(user.email).once("child_added", async (snapshot) => {
+                    console.log('snapshot', snapshot.key);
+                    this.setState({ userKey: snapshot.key })
+                    await firebase.database().ref("users/"+snapshot.key+'/myZakaz').on("value", async (data) => {
+                        console.log('value my jobs', data.toJSON());
+                        let keyJob = Object.keys(data.toJSON());
+                        console.log('keyJob', keyJob);
+                        let boofer = [];
+                        let objBoofer = {};
+                        await keyJob.forEach((value, key) => {
+                          console.log('key', key);
+                          firebase.database().ref("users/"+data.toJSON()[keyJob[key]].idUser).on("value", (data) => {
+                            
+                            if(data.toJSON().myZakaz == undefined) return false;
+
+                            console.log(keyJob[key]);
+                            console.log('data user', data.toJSON().myZakaz[keyJob[key]].publish);
+                            let date = new Date(data.toJSON().myZakaz[keyJob[key]].publish);
+                            let stringDate = date.getHours() + ':' + date.getMinutes();
+                            console.log('stringDate',  stringDate);
+                            objBoofer = {
+                              name: data.toJSON().name,
+                              surname: data.toJSON().surname,
+                              publish: stringDate,
+                              avatar: data.toJSON().avatar,
+                              active: data.toJSON().myZakaz[keyJob[key]].active,
+                              id: keyJob[key]
+                            }
+                            this.state.jobs.push(objBoofer)
+                            boofer.push(objBoofer);
+                            console.log('jobs', this.state.jobs, ' load', this.state.load);
+                          })
+                          
+
+                        })
+                        setTimeout(() => {
+                            this.setState({load: true});
+                        }, 2000)
+                        
+
+                        
+                    })
+                });
+            }
+        });
+
         await Font.loadAsync({
           'TTCommons-Bold': require('../../../assets/fonts/TTCommons-Bold.ttf'),
           'TTCommons-Regular': require('../../../assets/fonts/TTCommons-Regular.ttf'),
@@ -28,7 +82,9 @@ class MyJobs extends Component {
         this.props.fontLoader();
     }
     render() {
-        if(this.state.loadFont == true) {
+        console.log('render', this.state.load);
+        
+        if(this.state.loadFont == true && this.state.load == true) {
             return (
                 <ScrollView style={{
                     paddingBottom: 20
@@ -52,113 +108,137 @@ class MyJobs extends Component {
                             fontSize: 20,
                             marginLeft: 30
                         }}>Моя работа</Text>
-                    </View> 
-                    <View style={{
-                        justifyContent: 'center',
-                        alignItems: 'center'
-                    }}>            
-                        <View style={{
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            backgroundColor: '#EBEBEB',
-                            width: Dimensions.get('window').width*0.8,
-                            borderRadius: 5,
-                            padding: 10
-                        }}>
+                    </View>
+
+                    {
+                      this.state.jobs.map((value, key) => {
+                          console.log('value', value);
+                          
+                        return (
                             <View style={{
-                                width: Dimensions.get('window').width*0.8,
-                                flexDirection: 'row',
-                                padding: 10
+                                justifyContent: 'center',
+                                alignItems: 'center'
                             }}>
-                                <Avatar
-                                    size="medium"
-                                    rounded
-                                    icon={{name: 'user', type: 'font-awesome'}}
-                                    activeOpacity={0.7}
-                                />
-                                {/* Time */}
-                                <Text style={{
-                                    fontFamily: 'TTCommons-Regular',
-                                    fontSize: 16,
-                                    right: 10,
-                                    top: 10,
-                                    position: 'absolute',
-                                }}>15:30</Text>
-                                {/* Time */}
                                 <View style={{
-                                    marginLeft: 5
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    backgroundColor: '#EBEBEB',
+                                    width: Dimensions.get('window').width*0.8,
+                                    borderRadius: 5,
+                                    padding: 10
                                 }}>
+                                    <View style={{
+                                        width: Dimensions.get('window').width*0.8,
+                                        flexDirection: 'row',
+                                        padding: 10
+                                    }}>
+                                        {
+                                            value.avatar == '' ? <Avatar rounded title="TP" size="medium" /> : <Avatar
+                                                rounded
+                                                size="medium"
+                                                source={{
+                                                uri:
+                                                    value.avatar,
+                                                }}
+                                            />
+                                        }
+                                        {/* Time */}
+                                        <Text style={{
+                                            fontFamily: 'TTCommons-Regular',
+                                            fontSize: 16,
+                                            right: 10,
+                                            top: 10,
+                                            position: 'absolute',
+                                        }}>{value.publish}</Text>
+                                        {/* Time */}
+                                        <View style={{
+                                            marginLeft: 5
+                                        }}>
+                                            <View style={{
+                                                flexDirection: 'row',
+                                                justifyContent: 'space-between',
+                                                // width: Dimensions.get('window').width*0.5,
+                                            }}>
+                                                <Text style={{
+                                                    fontFamily: 'TTCommons-Bold',
+                                                    fontSize: 16
+                                                }}>
+                                                    {value.name} {value.surname}
+                                                </Text>
+                                            </View>
+                                            <View style={{
+                                                alignItems: 'flex-start',
+                                                justifyContent: 'flex-end',
+                                            }}>
+                                                <Text style={{
+                                                    fontFamily: 'TTCommons-Regular',
+                                                    fontSize: Dimensions.get('window').width < 330 ? 9 : 13,
+                                                    marginTop: 15
+                                                }}>
+                                                    Статус
+                                                </Text>
+                                            </View>
+                                        </View>
+                                        <View style={{
+                                            justifyContent: 'flex-end',
+                                            alignItems: 'flex-end',
+                                            position: 'absolute',
+                                            bottom: 10,
+                                            right: 10
+                                        }}>
+                                            <Text style={{
+                                                color: '#FFCC47',
+                                                fontFamily: 'TTCommons-Medium',
+                                                fontSize: Dimensions.get('window').width < 330 ? 9 : 13
+                                            }}>
+                                                {
+                                                    value.active == undefined ? 'Ожидает подтверждения'
+                                                    : value.active == true ? 'Выполняется' 
+                                                    : value.active == false ? 'Отказано' : ''
+                                                }
+                                            </Text>
+                                        </View>
+        
+                                    </View>
                                     <View style={{
                                         flexDirection: 'row',
                                         justifyContent: 'space-between',
-                                        // width: Dimensions.get('window').width*0.5,
-                                    }}> 
-                                        <Text style={{
-                                            fontFamily: 'TTCommons-Bold',
-                                            fontSize: 16
-                                        }}>
-                                            Джон Рихтер
-                                        </Text>
-                                    </View>
-                                    <View style={{
-                                        alignItems: 'flex-start',
-                                        justifyContent: 'flex-end',
+                                        width: Dimensions.get('window').width*0.8,
+                                        paddingLeft: 10,
+                                        paddingRight: 10,
                                     }}>
                                         <Text style={{
-                                            fontFamily: 'TTCommons-Regular',
-                                            fontSize: Dimensions.get('window').width < 330 ? 9 : 13,
-                                            marginTop: 15
-                                        }}>
-                                            Статус
-                                        </Text>
+                                            fontFamily: 'TTCommons-Bold',
+                                            fontSize: 18,
+                                            color: '#000'
+                                        }}
+                                        onPress={() => this.props.navigation.navigate('cancelJob', { id: value.id })}
+                                        >Отклонить</Text>
+                                        <Text style={{
+                                            fontFamily: 'TTCommons-Bold',
+                                            fontSize: 18,
+                                            color: '#000'
+                                        }}
+                                        onPress={() => this.props.navigation.navigate('acceptJob', { id: value.id })} >Принять</Text>
+                                        <Text style={{
+                                            fontFamily: 'TTCommons-Bold',
+                                            fontSize: 18,
+                                            color: '#000'
+                                        }}
+                                        onPress={() => this.props.navigation.navigate('Detail', { id: value.id })}
+                                        >Детали</Text>
                                     </View>
                                 </View>
-                                <View style={{
-                                    justifyContent: 'flex-end',
-                                    alignItems: 'flex-end',
-                                    position: 'absolute',
-                                    bottom: 10,
-                                    right: 10
-                                }}>
-                                    <Text style={{
-                                        color: '#FFCC47',
-                                        fontFamily: 'TTCommons-Medium',
-                                        fontSize: Dimensions.get('window').width < 330 ? 9 : 13
-                                    }}>Ожидает подтверждения</Text>
-                                </View>
-                               
                             </View>
-                            <View style={{
-                                flexDirection: 'row',
-                                justifyContent: 'space-between',
-                                width: Dimensions.get('window').width*0.8,
-                                paddingLeft: 10,
-                                paddingRight: 10,
-                            }}>
-                                <Text style={{
-                                    fontFamily: 'TTCommons-Bold',
-                                    fontSize: 18,
-                                    color: '#000'
-                                }}>Отклонить</Text>
-                                <Text style={{
-                                    fontFamily: 'TTCommons-Bold',
-                                    fontSize: 18,
-                                    color: '#000'
-                                }}
-                                onPress={() => this.props.navigation.navigate('acceptJob')} >Принять</Text>
-                                <Text style={{
-                                    fontFamily: 'TTCommons-Bold',
-                                    fontSize: 18,
-                                    color: '#000'
-                                }}>Детали</Text>
-                            </View>
-                        </View>
-                    </View>       
+                        )
+                      })
+                    }
+                    
                 </ScrollView>
             )
         }
         else {
-            return <View></View>
+            return <LoadIndicator />
         }
     }
 }

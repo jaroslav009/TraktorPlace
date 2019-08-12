@@ -20,7 +20,7 @@ import MyZakaz from '../components/client/MyZakaz/MyZakaz';
   import Logout2 from '../components/client/Logout/Logout2';
   // Logout
 
-  // Help 
+  // Help
   import Help from '../components/client/Help/Help';
   import HelpItem from '../components/client/Help/HelpItem';
   // Help
@@ -47,54 +47,45 @@ export default createAppContainer(
   createStackNavigator({
     // You could add another route here for authentication.
     // Read more at https://reactnavigation.org/docs/en/auth-flow.html43
-          MainClient: MainClient,
+        MyJobs: MyJobs,
+        MainClient: MainClient,
         Detail: Detail,
         acceptJob: acceptJob,
         successZakaz: successZakaz,
         cancelJob: cancelJob,
         cancelZakaz: cancelZakaz,
-
-        MyJobs: MyJobs,
-
-
-
-
         AccountMechanic: AccountMechanic,
         Account: Account,
-    
+        HeroScreen: HeroScreen,
+        MyZakaz: MyZakaz,
+        Login: Login,
+        ResetPassword: ResetPassword,
 
-    
-    
-    HeroScreen: HeroScreen,
-    MyZakaz: MyZakaz,
-    Login: Login,
-    ResetPassword: ResetPassword,
-    
-    Register: Register,
+        Register: Register,
 
-    // Feedback
-    Feedback: Feedback,
-    Feedback2: Feedback2,
-    // Feedback
+        // Feedback
+        Feedback: Feedback,
+        Feedback2: Feedback2,
+        // Feedback
 
-    // Logout
-    Logout1: Logout1,
-    Logout2: Logout2,
-    // Logout
+        // Logout
+        Logout1: Logout1,
+        Logout2: Logout2,
+        // Logout
 
-    // Help
-    Help: Help,
-    HelpItem: HelpItem,
-    // Help
+        // Help
+        Help: Help,
+        HelpItem: HelpItem,
+        // Help
 
-    // Header
-    HeaderClient: HeaderClient,
-    // Header
+        // Header
+        HeaderClient: HeaderClient,
+        // Header
 
-    
-  },
-  {
-    headerMode: 'none',
-  }
+
+      },
+      {
+        headerMode: 'none',
+      }
   )
 );
