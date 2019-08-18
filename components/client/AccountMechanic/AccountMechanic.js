@@ -20,7 +20,9 @@ class AccountMechanic extends PureComponent {
             description: '',
             timeWork: '',
             priceWork: '',
-            popSuccess: false
+            popSuccess: false,
+            advanced: '',
+            expeirence: '',
         }
         this.changeAvatar = this.changeAvatar.bind(this);
         this.changeData = this.changeData.bind(this);
@@ -43,6 +45,8 @@ class AccountMechanic extends PureComponent {
                             timeWork: data.toJSON().timeWork == undefined ? '' : data.toJSON().timeWork,
                             priceWork: data.toJSON().priceWork == undefined ? '' : data.toJSON().priceWork,
                             phone: data.toJSON().phone,
+                            advanced: data.toJSON().advanced,
+                            expeirence: data.toJSON().expeirence,
                         });
                         this.setState({load: true});
                     })
@@ -110,7 +114,9 @@ class AccountMechanic extends PureComponent {
         await firebase.database().ref("users/" + this.state.userKey).update({
             description: this.state.description,
             timeWork: this.state.timeWork,
-            priceWork: this.state.priceWork
+            priceWork: this.state.priceWork,
+            advanced: this.state.advanced,
+            expeirence: this.state.expeirence
         })
         .then(() => {
             this.setState({load: true, popSuccess: true});
@@ -230,11 +236,61 @@ class AccountMechanic extends PureComponent {
                         value={this.state.priceWork} />
                     </View>
                     <View style={{
+                        alignItems: 'center',
+                    }}>
+                        <TextInput style={{
+                            borderRadius: 10,
+                            fontFamily: 'TTCommons-Regular',
+                            width: 284,
+                            height: 50,
+                            backgroundColor: '#EDEDED',
+                            marginTop: 15,
+                            padding: 10
+                        }} 
+                        keyboardType="numeric"
+                        placeholder="Стаж (в годах)"
+                        onChange={(text) => { 
+                            this.setState({ expeirence: text.nativeEvent.text })
+                        }}
+                        value={this.state.expeirence} />
+                    </View>
+                    <View style={{
+                        alignItems: 'center',
+                    }}>
+                        <TextInput style={{
+                            borderRadius: 10,
+                            fontFamily: 'TTCommons-Regular',
+                            width: 284,
+                            height: 50,
+                            backgroundColor: '#EDEDED',
+                            marginTop: 15,
+                            padding: 10
+                        }} 
+                        placeholder="Хорошие качество"
+                        onChange={(text) => { 
+                            this.setState({ advanced: text.nativeEvent.text })
+                        }}
+                        value={this.state.advanced} />
+                    </View>
+                    <View style={{
                         justifyContent: 'center',
                         alignItems: 'center'
                     }}>
                         <TouchableOpacity style={styles.btn} onPress={() => this.changeData()}>
-                            <Text style={{color: '#fff', fontFamily: 'TTCommons-Regular',}}>Отправить</Text>
+                            <Text style={{color: '#fff', fontFamily: 'TTCommons-DemiBold', fontSize: 18}}>Отправить</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <View style={{
+                        justifyContent: 'center',
+                        alignItems: 'center'
+                    }}>
+                        <TouchableOpacity style={[styles.btn, {
+                            backgroundColor: '#DC4732',
+                        }]} onPress={() => {
+                            
+                            this.props.navigation.navigate('Logout1');
+                        }}>
+                            <Text style={{color: '#fff', fontFamily: 'TTCommons-DemiBold', fontSize: 18}}>Выход</Text>
                         </TouchableOpacity>
                     </View>
                 </ScrollView>

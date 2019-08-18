@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
-import { Text, View, Image, ImageBackground, StyleSheet, Dimensions, Linking, TouchableOpacity } from 'react-native';
+import { Text, View, Image, ImageBackground, StyleSheet, Dimensions, Share, TouchableOpacity } from 'react-native';
 import * as firebase from 'firebase';
+import { Constants } from 'expo';
 
 // Image
 import HeroLogo from '../assets/images/LogoHero.png';
@@ -25,13 +26,31 @@ class HeroScreen extends Component {
     }
     async componentDidMount() {
         await firebase.auth().onAuthStateChanged(async (user) => {
-            if(user){
-                if(user.emailVerified == true) {
-                    this.props.navigation.navigate('MainClient');
+            setTimeout(() => {
+                if(user){
+                    if(user.emailVerified == true) {
+                        this.props.navigation.navigate('MainClient');
+                    }
                 }
-            }
+            }, 1000)
+            
         })
         this.setState({ load: false });
+    }
+    _shareFacebook() {
+        console.log('dwqwqddqw');
+        
+        Share.share({
+          message: 'TraktorPlace is a gigant for you',
+          url: 'http://facebook.github.io/react-native/',
+          title: 'React Native'
+        }, {
+          dialogTitle: 'Share React Native website',
+      
+          tintColor: 'green'
+        })
+        .then(this._showResult)
+        .catch((error) => this.setState({result: 'error: ' + error.message}));
     }
     render() {
         if(this.state.load == true) {
@@ -47,15 +66,15 @@ class HeroScreen extends Component {
                             <Text style={{ color: '#fff', fontSize: 18, fontFamily: 'TTCommons-Thin' }} onPress={() => this.props.navigation.navigate('Register')}>Регистрация</Text>
                         </View>
                         <View style={styles.socIcon}>
-                            <TouchableOpacity style={styles.wrapperIcon}>
+                            <TouchableOpacity style={styles.wrapperIcon} onPress={() => this._shareFacebook() }>
                                 <Image source={google} />
                             </TouchableOpacity>
-                            <View style={styles.wrapperIcon}>
+                            <TouchableOpacity style={styles.wrapperIcon} onPress={() => this._shareFacebook() }>
                                 <Image source={vk} />
-                            </View>
-                            <View style={styles.wrapperIcon}>
-                                <Image source={facebook} />
-                            </View>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.wrapperIcon} onPress={() => this._shareFacebook() }>
+                                <Image source={facebook}  />
+                            </TouchableOpacity>
                             
                         </View>
                     </View>

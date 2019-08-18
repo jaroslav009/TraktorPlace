@@ -30,7 +30,7 @@ export default class HeaderClient extends Component {
                     firebase.database().ref("users/"+snapshot.key).on("value", (data) => {
                         console.log('value phone', data);
                         console.log('value phone2', data.toJSON().phone);
-                        this.setState({ 
+                        this.setState({
                             phone: data.toJSON().phone
                         });
                     })
@@ -40,7 +40,7 @@ export default class HeaderClient extends Component {
     }
 
     _openMenu() {
-        
+
         Animated.timing(                  // Animate over time
             this.state.fadeAnim,            // The animated value to drive
             {
@@ -56,8 +56,8 @@ export default class HeaderClient extends Component {
             }
         ).start();
         this.props.click(true)
-        this.setState({ open: true })        
-        
+        this.setState({ open: true })
+
     }
 
     _closeMenu() {
@@ -68,7 +68,7 @@ export default class HeaderClient extends Component {
               toValue: -500,                   // Animate to opacity: 1 (opaque)
               duration: 400
             }
-        ).start(); 
+        ).start();
         Animated.timing(                  // Animate over time
             this.state.opacBack,            // The animated value to drive
             {
@@ -81,106 +81,116 @@ export default class HeaderClient extends Component {
 
     render() {
             return (
-                <View>
-                    <Animated.View style={[styles.menuContainer, { 
-                            display: 'flex',
-                            elevation: 414141415,
-                            backgroundColor: 'rgba(52, 52, 52, 0.0)',
-                            transform: [
-                                { translateX: this.state.fadeAnim },
-                            ],
-                            flexDirection: 'row',
-                            paddingBottom: 25,
-                            borderRadius: 10,
-                            height: Dimensions.get('window').height
-                        }]}>
+              <View>
+                  <Animated.View style={[styles.menuContainer, {
+                          display: 'flex',
+                          elevation: 414141415,
+                          backgroundColor: 'rgba(52, 52, 52, 0.0)',
+                          transform: [
+                              { translateX: this.state.fadeAnim },
+                          ],
+                          flexDirection: 'row',
+                          paddingBottom: 25,
+                          borderRadius: 10,
+                          height: Dimensions.get('window').height
+                      }]}>
 
-                            <View style={{
-                                backgroundColor: '#3BD88D',
-                                padding: 15,
-                                paddingTop: 30,
-                                height: 250
-                            }}> 
-                                <Image source={burger} />
-                            </View>
+                          <View style={{
+                              backgroundColor: '#3BD88D',
+                              padding: 15,
+                              paddingTop: 30,
+                              height: 250
+                          }}>
+                              <Image source={burger} />
+                          </View>
 
-                            <View style={{
-                                width: '60%', 
-                                backgroundColor: '#fff', 
-                                zIndex: 100000,
-                                // paddingLeft: 40,
-                                height: 250
-                                }}>
-                                
-                                <View style={styles.containerMenu}>
-                                    <View style={{
-                                        marginTop: 10,
-                                        marginBottom: 10
-                                    }}>
-                                        <Text style={{
-                                            color: '#3BD88D',
-                                            fontSize: 17,
-                                            fontFamily: 'TTCommons-DemiBold'
-                                        }}>
-                                            {this.state.phone}
-                                        </Text>
-                                    </View>
-                                    <TouchableHighlight 
-                                        underlayColor="#fff" 
-                                        style={{
-                                            zIndex: 100000,
-                                        }}
-                                        onPress={() => {
-                                            this.props.navigation.navigate('Account')
-                                        }}
-                                        >
-                                        <Text style={[styles.darkText, 
-                                            {
-                                                fontSize: 17,
-                                                marginTop: 15,
-                                            }]}>Аккаунт</Text>
-                                    </TouchableHighlight>
+                          <View style={{
+                              width: '60%',
+                              backgroundColor: '#fff',
+                              zIndex: 100000,
+                              // paddingLeft: 40,
+                              height: 250
+                              }}>
 
-                                    <TouchableHighlight underlayColor="#fff" style={{zIndex: 100000}}
-                                    onPress={() => {
-                                        this.props.navigation.navigate('MyZakaz')
-                                    }}
-                                    >
-                                        <Text style={[styles.darkText, {
-                                            fontSize: 17,
-                                            marginTop: 20,
-                                            }]}>Мои заказы</Text>
-                                    </TouchableHighlight>
+                              <View style={styles.containerMenu}>
+                                  <View style={{
+                                      marginTop: 10,
+                                      marginBottom: 10
+                                  }}>
+                                      <Text style={{
+                                          color: '#3BD88D',
+                                          fontSize: 17,
+                                          fontFamily: 'TTCommons-DemiBold'
+                                      }}>
+                                          +7 (985) 542 5216
+                                      </Text>
+                                  </View>
+                                  <TouchableHighlight
+                                      underlayColor="#fff"
+                                      style={{
+                                          zIndex: 100000,
+                                      }}
+                                      onPress={() => {
+                                          this.props.navigation.navigate('Account')
+                                      }}
+                                      >
+                                      <Text style={[styles.darkText,
+                                          {
+                                              fontSize: 17,
+                                              marginTop: 15,
+                                          }]}>Аккаунт</Text>
+                                  </TouchableHighlight>
 
-                                    <TouchableHighlight underlayColor="#fff" style={{zIndex: 100000}} onPress={() => {
-                                            this.props.navigation.navigate('Help')
-                                        }}>
-                                        <Text style={[styles.darkText, {
-                                            fontSize: 17, 
-                                            marginTop: 20,
-                                            }]}>Помощь</Text>
-                                    </TouchableHighlight>
-                                </View>
-                            </View>
-                            <TouchableHighlight onPress={() => this._closeMenu()} style={{
-                                    width: '600%', 
-                                    height: Dimensions.get('window').height, 
-                                    opacity: 0,
-                                    position: 'absolute',
-                                    backgroundColor: 'transparent'
-                                }}
-                            >
-                                <View></View>
-                            </TouchableHighlight>
-                            
-                    </Animated.View>
-                    <View style={styles.header}>
-                        <TouchableHighlight style={{ alignSelf: 'center', padding: 15, zIndex: 100000 }} onPress={() => this._openMenu() }>
-                            <Image source={burger} style={styles.burger} />
-                        </TouchableHighlight>                        
-                    </View>
-                    
-                </View>
+                                  <TouchableHighlight underlayColor="#fff" style={{zIndex: 100000}}
+                                  onPress={() => {
+                                      this.props.navigation.navigate('MyZakaz')
+                                  }}
+                                  >
+                                      <Text style={[styles.darkText, {
+                                          fontSize: 17,
+                                          marginTop: 20,
+                                          }]}>Мои заказы</Text>
+                                  </TouchableHighlight>
+
+                                  <TouchableHighlight underlayColor="#fff" style={{zIndex: 100000}} onPress={() => {
+                                          this.props.navigation.navigate('PaymentMethod')
+                                      }}>
+                                      <Text style={[styles.darkText, {
+                                          fontSize: 17,
+                                          marginTop: 20,
+                                          }
+                                          ]}>Способ оплаты</Text>
+                                  </TouchableHighlight>
+
+                                  <TouchableHighlight underlayColor="#fff" style={{zIndex: 100000}} onPress={() => {
+                                          this.props.navigation.navigate('Help')
+                                      }}>
+                                      <Text style={[styles.darkText, {
+                                          fontSize: 17,
+                                          marginTop: 20,
+                                          }]}>Помощь</Text>
+                                  </TouchableHighlight>
+                              </View>
+                          </View>
+                          <TouchableHighlight onPress={() => this._closeMenu()} style={{
+                                  width: '600%',
+                                  height: Dimensions.get('window').height,
+                                  opacity: 0,
+                                  position: 'absolute',
+                                  backgroundColor: 'transparent'
+                              }}
+                          >
+                              <View></View>
+                          </TouchableHighlight>
+
+                  </Animated.View>
+                  <View style={styles.header}>
+                      <TouchableHighlight style={{ alignSelf: 'center', padding: 15, zIndex: 100000 }} onPress={() => this._openMenu() }>
+                          <Image source={burger} style={styles.burger} />
+                      </TouchableHighlight>
+                  </View>
+
+              </View>
             );
     }
 }
@@ -259,4 +269,3 @@ const styles = StyleSheet.create({
         opacity: 0.3
       }
 })
-

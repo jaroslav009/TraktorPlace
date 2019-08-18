@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "923969830123",
+    "firebase_url": "https://traktorplace-1565009856384.firebaseio.com",
+    "project_id": "traktorplace-1565009856384",
+    "storage_bucket": "traktorplace-1565009856384.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:923969830123:android:f6cf897bf5c804c4",
+        "android_client_info": {
+          "package_name": "com.traktorPlace"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "923969830123-d73u0khiu2mfnek361odivd8vcqv8hh9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBa8DKA3fxOhTqYt3eD5DBH_IoXTm3ltkU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "923969830123-d73u0khiu2mfnek361odivd8vcqv8hh9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

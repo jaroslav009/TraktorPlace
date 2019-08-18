@@ -29,6 +29,7 @@
     "description": "",
     "android": {
       "package": "com.TraktorPlace.TraktorPlace",
+      "googleServicesFile": "./google-services.json",
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyDd1UmcMXWfT9bU4wPWInnRLjGyLr8ZPEM"

@@ -35,7 +35,23 @@ export default class Detal extends Component {
         }
     }
     async componentDidMount() {
-
+        const { navigation } = this.props;
+        console.log(navigation.getParam('id'));
+        await firebase.database().ref("zakaz/"+navigation.getParam('id')).on("value", async (data) => {
+            console.log('data', data.toJSON());
+            
+            this.setState({
+                address: data.toJSON().address,
+                checked: data.toJSON().checked,
+                checkedZap: data.toJSON().checkedZap,
+                happened: data.toJSON().happened,
+                marka: data.toJSON().marka,
+                model: data.toJSON().model,
+                time: data.toJSON().time,
+                typeWork: data.toJSON().typeWork,
+                yearRel: data.toJSON().yearRel
+            })
+        });
         await firebase.auth().onAuthStateChanged(async (user) => {
             if(user) {
                 firebase.database().ref("users").orderByChild("confEmail").equalTo(user.email).once("child_added", (snapshot) => {
@@ -98,6 +114,7 @@ export default class Detal extends Component {
                     <View style={{
                     justifyContent: 'flex-start',
                     alignItems: 'center',
+                    marginTop: 40
                 }}>
                     <View style={[[styles.containerInput, {marginTop: 10}]]}>
                         
@@ -110,6 +127,7 @@ export default class Detal extends Component {
                         <TextInput 
                             style={styles.input} 
                             placeholder="Адрес"
+                            value={this.state.address}
                             onChange={(text) => { 
                                 this.setState({ address: text.nativeEvent.text }) 
                             }} />
@@ -125,6 +143,7 @@ export default class Detal extends Component {
                         <TextInput 
                             style={styles.input} 
                             placeholder="Время"
+                            value={this.state.time}
                             onChange={(text) => { 
                                 this.setState({ time: text.nativeEvent.text }) 
                             }} />
@@ -139,6 +158,7 @@ export default class Detal extends Component {
                         <Text style={[styles.errText, { display: this.state.errMarka }]}>Марка</Text>
                         <TextInput 
                             style={styles.input} 
+                            value={this.state.marka}
                             placeholder="Марка"
                             onChange={(text) => { 
                                 if(text == '') {
@@ -158,7 +178,8 @@ export default class Detal extends Component {
                         </Text>
                         <Text style={[styles.errText, { display: this.state.errModel }]}>Модель</Text>
                         <TextInput 
-                            style={styles.input} 
+                            style={styles.input}
+                            value={this.state.model}
                             placeholder="Модель"
                             onChange={(text) => { 
                                 if(text == '') {
@@ -180,6 +201,7 @@ export default class Detal extends Component {
                         <TextInput 
                             style={styles.input} 
                             placeholder="Год выпуска"
+                            value={this.state.yearRel}
                             onChange={(text) => { 
                                 if(text == '') {
                                     this.setState({ errYearRel: 'flex' });
@@ -197,7 +219,9 @@ export default class Detal extends Component {
                     }]}>
                         <Text style={{
                             marginRight: 20,
-                            width: '50%'
+                            width: '50%',
+                            fontSize: 18,
+                            fontFamily: 'TTCommons-Regular'
                         }}>Свои запчасти</Text>
                         <CheckBox
                                 center
@@ -304,13 +328,11 @@ export default class Detal extends Component {
                         <TextInput 
                             style={styles.input} 
                             placeholder="Что случилось?"
+                            value={this.state.happened}
                             onChange={(text) => { 
                                 this.setState({ happened: text.nativeEvent.text }) 
                             }} />
                     </View>
-                    <TouchableOpacity style={styles.btn} onPress={this.dataBtn}>
-                        <Text style={{color: '#fff'}}>Подтвердить</Text>
-                    </TouchableOpacity>
                     </View>
                 </ScrollView>
             );
@@ -343,7 +365,7 @@ const styles = StyleSheet.create({
         textAlign: 'left',
         color: '#737373',
         fontSize: 21,
-        // fontFamily: 'TTCommons-Regular'
+        fontFamily: 'TTCommons-Regular'
     },
     triangle: {
         backgroundColor: '#3BD88D',

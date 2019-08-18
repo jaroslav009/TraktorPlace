@@ -1,6 +1,7 @@
 import React, {PureComponent} from 'react';
 import { Text, View, ScrollView, Dimensions, TouchableOpacity } from 'react-native';
 import * as Font from 'expo-font';
+import * as firebase from 'firebase';
 
 import Back from '../../Back';
 
@@ -10,18 +11,37 @@ class acceptJob extends PureComponent {
         this.state = {
             loadFont: false,
         }
+        this.acceptJob = this.acceptJob.bind(this);
     }
 
     async componentDidMount() {
+        console.log('safpojweoifgheruighuiweeguiweguiwegiuweiuguiewghjghwjehguiwehguiwehguihweughweughewuighweghewgiuwehguiwehguwheugiwhuegiwh');
+        
         await Font.loadAsync({
           'TTCommons-DemiBold': require('../../../assets/fonts/TTCommons-DemiBold.ttf'),
         })
         .then(() => {
             this.setState({ loadFont: true });
         })
-        this.props.fontLoader();
+    }
+    async acceptJob() {
+        const { navigation } = this.props;
+        console.log('dqwdwqdqw1232rwefgrgrqwgeqgwgweqegewgweqgewqgweq', navigation.getParam('id'));
+        
+        await firebase.database().ref("zakaz/"+navigation.getParam('id')).on("value", async (data) => {
+            console.log('data', data.toJSON().user);
+
+            await firebase.database().ref("users/"+data.toJSON().uidDriver+"/zakaz/"+navigation.getParam('id')).update({
+                active: true,
+            });
+
+            await firebase.database().ref("users/"+data.toJSON().user+"/myZakaz/"+navigation.getParam('id')).update({
+                active: true,
+            });
+        });
     }
     render() {
+        const { navigation } = this.props;
         if(this.state.loadFont == true) {
 
             return (
@@ -64,8 +84,10 @@ class acceptJob extends PureComponent {
                             elevation: 1,
                             marginBottom: 20
                         }} onPress={() => {
-                            
-                            this.props.navigation.navigate('successZakaz');
+                            this.acceptJob();
+                            this.props.navigation.navigate('successZakaz', {
+                                id: this.props.navigation.getParam('id'),
+                            });
                         }}>
                             <Text style={{color: '#fff', fontFamily: 'TTCommons-DemiBold', fontSize: 18}}>Да</Text>
                         </TouchableOpacity>

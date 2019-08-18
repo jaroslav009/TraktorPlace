@@ -1,18 +1,22 @@
 import React, {Component} from 'react';
-import { Text, View, Image, Dimensions, TouchableOpacity, TextInput, Animated, Easing, ScrollView } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import { AppState, Text, View, Image, Dimensions, TouchableOpacity, TextInput, Animated, Easing, ScrollView, Alert, UIManager, Keyboard } from 'react-native';
+import MapView, { Polyline } from 'react-native-maps';
 import * as Permissions from 'expo-permissions';
 import * as Location from 'expo-location';
 import * as firebase from 'firebase';
 import * as Font from 'expo-font';
 import { Avatar, CheckBox } from 'react-native-elements';
+import { Notifications } from 'expo';
 
+import SuccessPopUp from '../SuccessPopUp/SuccessPopUp';
 import LoadIndicator from '../../constants/LoadIndicator';
 import HeaderClient from './HeaderClient/HeaderClient';
 import MechanicHeader from './HeaderMechanic/MechanicHeader';
 
 import downArrow from '../../assets/images/down-arrow.png';
 import rating from '../../assets/images/rating.png';
+import car from '../../assets/images/car.png'
+const { State: TextInputState } = TextInput;
 
 function makeid(length) {
     var result           = '';
@@ -74,6 +78,8 @@ class MainClient extends Component {
             showRating: null,
             acceptBtn: false,
             avatar: '',
+            shift: new Animated.Value(0),
+            popSuccess: false
         }
         this.streetSelect = this.streetSelect.bind(this);
         this.closeStr = this.closeStr.bind(this);
@@ -83,14 +89,29 @@ class MainClient extends Component {
         this.handleClickHeader = this.handleClickHeader.bind(this);
         this.pressDriver = this.pressDriver.bind(this);
         this.chooseDriver = this.chooseDriver.bind(this);
+        this.handleAppStateChange = this.handleAppStateChange.bind(this);
     }
+
     async componentDidMount() {
-        console.log('anufe', this.state.modalStr.Value);
+
+        this.registerForPushNotificationsAsync();
+            
+        // Notifications.addListener(this.listenerNotific)
+
+        AppState.addEventListener('change', this.handleAppStateChange);
+        const { navigation } = this.props;
+        console.log('navigation.getParam', navigation.getParam('userLatitude')+1);
+        this.setState({
+            userLatitude: navigation.getParam('userLatitude')+1,
+            userLongitude: navigation.getParam('userLongitude')+1
+        });
+        console.log('anufe', Dimensions.get('window').height);
         await Font.loadAsync({
           'TTCommons-DemiBold': require('../../assets/fonts/TTCommons-DemiBold.ttf'),
           'TTCommons-Regular': require('../../assets/fonts/TTCommons-Regular.ttf'),
           'TTCommons-Medium': require('../../assets/fonts/TTCommons-Medium.ttf'),
           'TTCommons-Black': require('../../assets/fonts/TTCommons-Black.ttf'),
+          'TTCommons-Bold': require('../../assets/fonts/TTCommons-Bold.ttf'),
         })
         .then(() => {
             this.setState({ loadFont: true });
@@ -103,12 +124,16 @@ class MainClient extends Component {
 
         // Driver
         await firebase.auth().onAuthStateChanged( async (user) => {
+
             if(user) {
+                
                 console.log('user', user.uid);
                 this.setState({ uid: user.uid, email: user.email, uidDriverUser: user.uid });
+                
                 await firebase.database().ref("users").orderByChild("confEmail").equalTo(this.state.email).once("child_added", async (snapshot) => {
-                    console.log('snapshot', snapshot.key);
-                    this.setState({ userKey: snapshot.key })
+                    console.log('snapshotUser', snapshot.key);
+                    this.setState({ userKey: snapshot.key });
+                    
                     await firebase.database().ref("users/"+this.state.userKey).once("value", async (data) => {
                         this.setState({
                             description: data.toJSON().description,
@@ -116,18 +141,31 @@ class MainClient extends Component {
                             timeWork: data.toJSON().timeWork,
                             priceWork: data.toJSON().priceWork,
                             uidDriver: data.toJSON().uidDriver,
-                            avatar: data.toJSON().avatar
-                            // rating: data.toJSON().rating
+                            avatar: data.toJSON().avatar,
+                            rating: data.toJSON().rating,
+                            advanced: data.toJSON().advanced,
+                            expeirence: data.toJSON().expeirence,
                         });
-                        await this._getLocationAsync();
+                        console.log('log1233213213 role', data.toJSON().role);
+                        
+                        if(data.toJSON().role == 'mechanic') {
+                            await this._getLocationAsync();
+                        }
+                        
                     });
                 })
+            } else {
+                this.props.navigation.navigate('HomeScreen');
             }
         });
-
         await this._getLocationAsync();
-
+        
         await firebase.database().ref('positionDriver/').on('value', (snapshot) => {
+            console.log('snapshot ', snapshot.val());
+            
+            if(snapshot.val() == null) {
+                return;
+            }
             let keySnappshot = Object.keys(snapshot.val());
             let arrBoof = [];
             let count = 0;
@@ -146,6 +184,7 @@ class MainClient extends Component {
         this.setState({ load: false });
         // Driver
     }
+    
     _getLocationAsync = async () => {
         let { status } = await Permissions.askAsync(Permissions.LOCATION);
         if (status !== 'granted') {
@@ -163,25 +202,29 @@ class MainClient extends Component {
                     await firebase.database().ref("users").orderByChild("confEmail").equalTo(this.state.email).once("child_added", async (snapshot) => {
                         console.log('snapshot', snapshot.key);
                         console.log('dataloc', dataLoc);
-                        firebase.database().ref('positionDriver/' + this.state.uid).set({
-                            latitude: dataLoc.coords.latitude,
-                            longitude: dataLoc.coords.longitude,
-                            latitudeDelta: 0.0922,
-                            longitudeDelta: 0.0421,
-                            description: this.state.description,
-                            priceWork: this.state.priceWork,
-                            timeWork: this.state.timeWork,
-                            uidDriver: snapshot.key,
-                            driverId: snapshot.key,
-                            avatar: this.state.avatar
-                            // rating: this.state.rating
-                          }, (error) => {
-                            if (error) {
-                                console.log('err', error);
-                            } else {
-                                console.log('Data saved positon');
-                            }
-                        });
+                        if(this.state.role == 'mechanic') {
+                            firebase.database().ref('positionDriver/' + snapshot.key).set({
+                                latitude: dataLoc.coords.latitude,
+                                longitude: dataLoc.coords.longitude,
+                                latitudeDelta: 0.0922,
+                                longitudeDelta: 0.0421,
+                                description: this.state.description,
+                                priceWork: this.state.priceWork,
+                                timeWork: this.state.timeWork,
+                                uidDriver: snapshot.key,
+                                driverId: snapshot.key,
+                                avatar: this.state.avatar,
+                                rating: this.state.rating == undefined ? 2.5 : this.state.rating,
+                                expeirence: this.state.expeirence == undefined ? '' : this.state.expeirence,
+                                advanced: this.state.advanced == undefined ? '' : this.state.advanced,
+                            }, (error) => {
+                                if (error) {
+                                    console.log('err', error);
+                                } else {
+                                    console.log('Data saved positon');
+                                }
+                            });
+                        }
                         this.setState({ latitude: dataLoc.coords.latitude, longitude: dataLoc.coords.longitude })
                         this.setState({mapRegion: { latitude: dataLoc.coords.latitude, longitude: dataLoc.coords.longitude, latitudeDelta: 0.0922, longitudeDelta: 0.0421 }});
                     })
@@ -302,13 +345,19 @@ class MainClient extends Component {
         showDesc: this.state.drivers[value].description,
         showTimeWork: this.state.drivers[value].timeWork,
         showPriceWork: this.state.drivers[value].priceWork,
+        avatar: this.state.drivers[value].avatar,
+        advanced: this.state.drivers[value].advanced,
+        expeirence: this.state.drivers[value].expeirence,
+        rating: this.state.drivers[value].rating
       })
     }
 
-    chooseDriver() {
+    async chooseDriver() {
       console.log(this.state.drivers[this.state.keyDriver]);
       let id = makeid(10);
-      firebase.database().ref('zakaz/' + id).set({
+      console.log(this.state.drivers[this.state.keyDriver].driverId);
+      
+      await firebase.database().ref('zakaz/' + id).set({
           uidDriver: this.state.drivers[this.state.keyDriver].driverId,
           address: this.state.address,
           marka: this.state.marka,
@@ -321,6 +370,8 @@ class MainClient extends Component {
           checkedZap: this.state.checkedZap,
           user: this.state.userKey,
           publish: new Date(),
+          latitude: this.state.latitude,
+          longitude: this.state.longitude
 
         }, (error) => {
           if (error) {
@@ -328,12 +379,26 @@ class MainClient extends Component {
           } else {
               console.log('Data saved positon');
           }
-      });
+      })
+      .then(() => {
+          console.log('popup open');
+          
+            this.setState({ popSuccess: true });
+            setTimeout(() => {
+            this.setState({ popSuccess: false });
+            }, 1000)
+      })
+      .catch(err => {
+          console.log('err', err);
+          
+      })
 
-      firebase.database().ref('users/' + this.state.drivers[this.state.keyDriver].driverId + '/zakaz/' + id).update({
+      await firebase.database().ref('users/' + this.state.drivers[this.state.keyDriver].driverId + '/zakaz/' + id).update({
           zakaz: id,
           idUser: this.state.userKey,
           publish: new Date(),
+          latitude: this.state.latitude,
+          longitude: this.state.longitude
         }, (error) => {
           if (error) {
               console.log('err', error);
@@ -342,10 +407,35 @@ class MainClient extends Component {
           }
       });
 
-      firebase.database().ref('users/' + this.state.userKey + '/myZakaz/' + id).update({
+      await firebase.database().ref('users/' + this.state.drivers[this.state.keyDriver].driverId).once("value", (data) => {
+        console.log('data json driverid123json driverid123json driverid123json driverid123json driverid123json driverid123json driverid123json driverid123json driverid123json driverid123json driverid123', data.toJSON());
+        console.log('data json driverid123json driverid123json driverid123json driverid123json driverid123json driverid123json driverid123json driverid123json driverid123json driverid123json driverid123', data.toJSON().expoToken);
+        
+        fetch('https://exp.host/--/api/v2/push/send', {
+            method: 'POST',
+            headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                "to": data.toJSON().expoToken,
+                "title": "Новый заказ",
+                "sound": "default",
+                "body": ""
+            }),
+        })
+        .then(() => {
+            console.log('push notififaction send');
+            
+        })
+      });
+
+      await firebase.database().ref('users/' + this.state.userKey + '/myZakaz/' + id).update({
           zakaz: id,
           idUser: this.state.drivers[this.state.keyDriver].driverId,
           publish: new Date(),
+          latitude: this.state.latitude,
+          longitude: this.state.longitude
         }, (error) => {
           if (error) {
               console.log('err', error);
@@ -358,21 +448,124 @@ class MainClient extends Component {
         chooseMechanic: false,
         dataDriver: false,
         acceptBtn: false,
-        addressForm: true,
+        addressForm: false,
         confirmAddress: ''
       })
     }
 
+    // KeyBoard
+    componentWillUnmount() {
+        AppState.removeEventListener('change', this.handleAppStateChange);
+        this.keyboardDidShowSub.remove();
+        this.keyboardDidHideSub.remove();
+    }
+    componentWillMount() {
+        this.keyboardDidShowSub = Keyboard.addListener('keyboardDidShow', this.handleKeyboardDidShow);
+        this.keyboardDidHideSub = Keyboard.addListener('keyboardDidHide', this.handleKeyboardDidHide);
+      }
+
+    handleKeyboardDidShow = (event) => {
+          console.log('didShow');
+          
+        const { height: windowHeight } = Dimensions.get('window');
+        const keyboardHeight = event.endCoordinates.height;
+        const currentlyFocusedField = TextInputState.currentlyFocusedField();
+        UIManager.measure(currentlyFocusedField, (originX, originY, width, height, pageX, pageY) => {
+          const fieldHeight = height;
+          const fieldTop = pageY;
+          const gap = (windowHeight - keyboardHeight) - (fieldTop + fieldHeight);
+          if (gap >= 0) {
+            return;
+          }
+          Animated.timing(
+            this.state.shift,
+            {
+              toValue: gap,
+              duration: 500,
+              useNativeDriver: true,
+            }
+          ).start();
+        });
+    }
+    
+    handleKeyboardDidHide = () => {
+        console.log('hidden key');
+        
+      Animated.timing(
+        this.state.shift,
+        {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }
+      ).start();
+    }
+    // KeyBoard
+
+    // listenerNotific() {
+    //     Alert.alert('dqwdwqdwqdwqqwddwqwqddwq');       
+        
+    // }
+
+    handleAppStateChange = (nextAppState) => {
+        firebase.database().ref("positionDriver/"+this.state.userKey).remove();  
+    }
+
+    async registerForPushNotificationsAsync() {
+        const { status: existingStatus } = await Permissions.getAsync(
+          Permissions.NOTIFICATIONS
+        );
+        let finalStatus = existingStatus;
+      
+        // only ask if permissions have not already been determined, because
+        // iOS won't necessarily prompt the user a second time.
+        if (existingStatus !== 'granted') {
+          // Android remote notification permissions are granted during the app
+          // install, so this will only ask on iOS
+          const { status } = await Permissions.askAsync(Permissions.NOTIFICATIONS);
+          finalStatus = status;
+        }
+      
+        // Stop here if the user did not grant permissions
+        if (finalStatus !== 'granted') {
+          return;
+        }
+      
+        // Get the token that uniquely identifies this device
+        let token = await Notifications.getExpoPushTokenAsync();
+        console.log('tokenExpo', token);
+        
+        firebase.database().ref("users/"+this.state.userKey).update({
+            expoToken: token,
+        })
+        // let update = {};
+        // updates['/expoToken'] = token;
+        // firebase.database().ref("/users").child(user.ui).updates(updates)
+        
+    }
+
     render() {
-        let text2 = '';
+        const { shift } = this.state;
+        const { navigation } = this.props;
+
         let count = 0;
         let name = '';
-        console.log('render', this.state.drivers[0].latitude);
         if(this.state.load == true || this.state.loadFont == false) {
             return <LoadIndicator />
         }
         return (
             <View style={{flex: 1, height: '100%'}}>
+                {/* Success */}
+                <View style={{
+                    position: this.state.popSuccess == false ? 'relative' : 'absolute',
+                    display: this.state.popSuccess == false ? 'none' : 'flex',
+                    right: 0,
+                    top: 50,
+                    zIndex: 1000000000000
+                }}>
+                    <SuccessPopUp text="Информация о заявке находится в Мои заказы" color="#EBEBEB" />
+                </View>
+                {/* Success */}
                 <View>
                     {
                         this.state.role == 'mechanic' ?
@@ -386,7 +579,9 @@ class MainClient extends Component {
                     }
 
                 </View>
-                {/* <Text>Location: {this.state.latitude} </Text> */}
+                
+                
+
                 <View style={{
                   justifyContent: 'center',
                   alignItems: 'center'
@@ -412,7 +607,33 @@ class MainClient extends Component {
                     rotateEnabled={true}
                     style={{flex: 1}}
                 >
-
+                    {
+                        navigation.getParam('userLatitude') != null ? <Polyline
+                        coordinates={[
+                            { latitude: this.state.latitude, longitude: this.state.longitude},
+                            { latitude: navigation.getParam('userLatitude'), longitude: navigation.getParam('userLongitude') },
+                        ]}
+                        strokeColor="#3BD88D" // fallback for when `strokeColors` is not supported by the map-provider
+                        strokeColors={[
+                            '#3BD88D',
+                        ]}
+                        strokeWidth={2}
+                    /> : <Polyline
+                    coordinates={[
+        { latitude: 37.7896386, longitude: -122.421646 },
+        { latitude: 37.7665248, longitude: -122.4161628 },
+        { latitude: 37.7734153, longitude: -122.4577787 },
+        { latitude: 37.7948605, longitude: -122.4596065 },
+        { latitude: 37.8025259, longitude: -122.4351431 }
+                    ]}
+                    strokeColor="#3BD88D" // fallback for when `strokeColors` is not supported by the map-provider
+                    strokeColors={[
+                        '#3BD88D',
+                    ]}
+                    strokeWidth={3}
+                />
+                    }
+                   
                     {
                         this.state.drivers.map((value, key) => {
                             name = 'openDrive'+count;
@@ -444,7 +665,7 @@ class MainClient extends Component {
                                     this.pressDriver(key)
                                 }}
                             >
-                                <TouchableOpacity style={{
+                                {/* <TouchableOpacity style={{
                                     height: 12,
                                     width: 12,
                                     borderRadius: 50,
@@ -452,7 +673,11 @@ class MainClient extends Component {
                                     position: 'absolute',
                                     zIndex: 123123123123
                                 }}
-                                ></TouchableOpacity>
+                                ></TouchableOpacity> */}
+                                <Image source={car} style={{
+                                    width: 20,
+                                    height: 20
+                                }} />
 
 
                             </MapView.Marker.Animated>
@@ -466,157 +691,165 @@ class MainClient extends Component {
                 </MapView>
 
                 {/* Data driver */}
-                <View style={{
-                    display: this.state.dataDriver == false ? 'none' : 'flex',
-                    position: this.state.dataDriver == false ? 'relative' : 'absolute',
-                    // top: 80,
-                    width: Dimensions.get('window').width,
-                    height: Dimensions.get('window').height*0.5,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    top: 80,
-                }}>
+                {
+                    this.state.role == 'mechanic' ? <View></View> 
+                    :
                     <View style={{
-                        backgroundColor: '#fff',
-                        width: Dimensions.get('window').width*0.8,
-                        padding: 12,
+                        display: this.state.dataDriver == false ? 'none' : 'flex',
+                        position: this.state.dataDriver == false ? 'relative' : 'absolute',
+                        // top: 80,
+                        width: Dimensions.get('window').width,
+                        height: Dimensions.get('window').height*0.5,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        top: 80,
                     }}>
                         <View style={{
-                            flexDirection: 'row',
-                            alignItems: 'center'
+                            backgroundColor: '#fff',
+                            width: Dimensions.get('window').width*0.8,
+                            padding: 12,
                         }}>
-                            <View>
-                              {
-                                  this.state.drivers[this.state.keyDriver] == '' ? <Avatar rounded title="TP" size="medium" /> : <Avatar
-                                      rounded
-                                      size="medium"
-                                      source={{
-                                      uri:
-                                          this.state.avatar,
-                                      }}
-                                  />
-                              }
+                            <View style={{
+                                flexDirection: 'row',
+                                alignItems: 'center'
+                            }}>
+                                <View>
+                                  {
+                                      this.state.drivers[this.state.keyDriver] == '' ? <Avatar rounded title="TP" size="medium" /> : <Avatar
+                                          rounded
+                                          size="medium"
+                                          source={{
+                                          uri:
+                                              this.state.avatar,
+                                          }}
+                                      />
+                                  }
+                                </View>
+                                <View>
+                                    <View style={{
+                                        width: Dimensions.get('window').width*0.4,
+                                        marginLeft: 10,
+                                    }}>
+                                        <View style={{
+                                            flexDirection: 'row',
+                                            justifyContent: 'space-between',
+                                            borderBottomColor: '#DEDEDE',
+                                            borderBottomWidth: 1,
+                                            paddingBottom: 5
+                                        }}>
+    
+                                            <Text style={{
+                                                fontSize: 14,
+                                                opacity: this.state.expeirence == undefined || this.state.expeirence == '' ? 0 : 1
+                                            }}>Стаж<Text style={{
+                                                fontSize: 14,
+                                                color: '#3BD88D',
+                                                fontFamily: 'TTCommons-Medium'
+    
+                                            }}> {this.state.expeirence} года</Text></Text>
+                                            <View style={{
+                                                flexDirection: 'row',
+                                                fontFamily: 'TTCommons-Medium'
+                                            }}>
+                                                <Text style={{
+                                                    marginRight: 5,
+                                                    fontSize: 14,
+                                                    color: '#FFC850',
+                                                    fontFamily: 'TTCommons-Regular'
+                                                }}>{this.state.rating == undefined || this.state.rating == '' ? '2.5' : this.state.rating}</Text>
+                                                <Image source={rating} style={{
+                                                    width: 14,
+                                                    height: 14
+                                                }} />
+                                            </View>
+                                        </View>
+                                        <View style={{
+                                            marginTop: 7,
+                                            opacity: this.state.advanced == undefined || this.state.advanced == '' ? 0 : 1
+                                        }}>
+                                            <Text style={{
+                                                fontFamily: 'TTCommons-Medium',
+                                                fontSize: 11,
+                                                color: '#000'
+                                            }}>{this.state.advanced}</Text>
+                                        </View>
+                                        <View style={{
+                                            marginTop: 7
+                                        }}>
+                                            <Text style={{
+                                                fontFamily: 'TTCommons-Regular',
+                                                fontSize: 11,
+                                                color: '#464646'
+                                            }}>{this.state.showDesc}</Text>
+                                        </View>
+                                    </View>
+                                </View>
                             </View>
-                            <View>
+                            <View style={{
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+    
+                            }}>
                                 <View style={{
-                                    width: Dimensions.get('window').width*0.4,
-                                    marginLeft: 10,
+                                    justifyContent: 'center'
                                 }}>
                                     <View style={{
                                         flexDirection: 'row',
                                         justifyContent: 'space-between',
-                                        borderBottomColor: '#DEDEDE',
-                                        borderBottomWidth: 1,
-                                        paddingBottom: 5
+                                        alignItems: 'center',
+                                        marginTop: 15
                                     }}>
                                         <Text style={{
-                                            fontSize: 14
-                                        }}>Стаж<Text style={{
-                                            fontSize: 14,
-                                            color: '#3BD88D',
-                                            fontFamily: 'TTCommons-Medium'
-
-                                        }}> 2 года</Text></Text>
-                                        <View style={{
-                                            flexDirection: 'row',
-                                            fontFamily: 'TTCommons-Medium'
-                                        }}>
-                                            <Text style={{
-                                                marginRight: 5,
-                                                fontSize: 14,
-                                                color: '#FFC850',
-                                                fontFamily: 'TTCommons-Regular'
-                                            }}>{this.state.showRating}</Text>
-                                            <Image source={rating} style={{
-                                                width: 14,
-                                                height: 14
-                                            }} />
-                                        </View>
-                                    </View>
-                                    <View style={{
-                                        marginTop: 7
-                                    }}>
-                                        <Text style={{
+                                            fontSize: 9,
                                             fontFamily: 'TTCommons-Medium',
-                                            fontSize: 11,
-                                            color: '#000'
-                                        }}>Внимательный Ответственный Трудолюбивый</Text>
+                                         }}>Примерное время работы:</Text>
+                                        <Text style={{
+                                            fontSize: 9,
+                                            fontFamily: 'TTCommons-DemiBold',
+                                            marginLeft: 5
+                                         }}>{this.state.showTimeWork} ч.</Text>
                                     </View>
                                     <View style={{
-                                        marginTop: 7
+                                        flexDirection: 'row',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        marginTop: 15,
                                     }}>
                                         <Text style={{
-                                            fontFamily: 'TTCommons-Regular',
-                                            fontSize: 11,
-                                            color: '#464646'
-                                        }}>{this.state.showDesc}</Text>
+                                            fontSize: 9,
+                                            fontFamily: 'TTCommons-Medium',
+                                         }}>Примерная цена работы:</Text>
+                                        <Text style={{
+                                            fontSize: 9,
+                                            fontFamily: 'TTCommons-DemiBold',
+                                            marginLeft: 5
+                                         }}>{this.state.showPriceWork} р.</Text>
                                     </View>
                                 </View>
-                            </View>
-                        </View>
-                        <View style={{
-                            flexDirection: 'row',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-
-                        }}>
-                            <View style={{
-                                justifyContent: 'center'
-                            }}>
                                 <View style={{
-                                    flexDirection: 'row',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    marginTop: 15
+                                  opacity: this.state.acceptBtn == true ? 1 : 0
                                 }}>
-                                    <Text style={{
-                                        fontSize: 9,
-                                        fontFamily: 'TTCommons-Medium',
-                                     }}>Примерное время работы:</Text>
-                                    <Text style={{
-                                        fontSize: 9,
-                                        fontFamily: 'TTCommons-DemiBold',
-                                        marginLeft: 5
-                                     }}>{this.state.showTimeWork} ч.</Text>
+                                  <TouchableOpacity style={[styles.btn, {
+                                      height: 60,
+                                      width: 90,
+                                      padding: 0,
+                                      borderRadius: 10,
+                                      display: this.state.acceptBtn == true ? 'flex' : 'none'
+                                  }]}
+                                  onPress={() => {
+                                    console.log('driver choose');
+                                    this.chooseDriver();
+                                  }}
+                                  >
+                                      <Text style={{color: '#fff', fontFamily: 'TTCommons-Black', fontSize: 18, margin: 0}}>Выбрать</Text>
+                                  </TouchableOpacity>
                                 </View>
-                                <View style={{
-                                    flexDirection: 'row',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    marginTop: 15,
-                                }}>
-                                    <Text style={{
-                                        fontSize: 9,
-                                        fontFamily: 'TTCommons-Medium',
-                                     }}>Примерная цена работы:</Text>
-                                    <Text style={{
-                                        fontSize: 9,
-                                        fontFamily: 'TTCommons-DemiBold',
-                                        marginLeft: 5
-                                     }}>{this.state.showPriceWork} р.</Text>
-                                </View>
-                            </View>
-                            <View style={{
-                              opacity: this.state.acceptBtn == true ? 1 : 0
-                            }}>
-                              <TouchableOpacity style={[styles.btn, {
-                                  height: 60,
-                                  width: 90,
-                                  padding: 0,
-                                  borderRadius: 10,
-                                  display: this.state.acceptBtn == true ? 'flex' : 'none'
-                              }]}
-                              onPress={() => {
-                                console.log('driver choose');
-                                this.chooseDriver();
-                              }}
-                              >
-                                  <Text style={{color: '#fff', fontFamily: 'TTCommons-Black', fontSize: 18, margin: 0}}>Выбрать</Text>
-                              </TouchableOpacity>
                             </View>
                         </View>
                     </View>
-                </View>
+                }
+                
                 {/* Data driver */}
 
                 {/* Fon close modal */}
@@ -630,16 +863,18 @@ class MainClient extends Component {
                 {/* Fon close modal */}
 
                 {/* Address form */}
-                <TouchableOpacity style={[styles.where, {
-                    display: this.state.addressForm == true ? 'none' : 'flex',
-                    position: this.state.addressForm == true ? 'relative' : 'absolute'
-                }]} onPress={this.streetSelect}>
-                    <Text style={{ color: '#737373', textAlign: 'center' }}>Куда?</Text>
-                </TouchableOpacity>
-
-                <Animated.View style={[styles.formWhere, {
-                    bottom: this.state.modalStr,
-                }]}>
+                {
+                    this.state.role == 'mechanic' ? <View></View> : <TouchableOpacity style={[styles.where, {
+                        display: this.state.addressForm == true ? 'none' : 'flex',
+                        position: this.state.addressForm == true ? 'relative' : 'absolute'
+                    }]} onPress={this.streetSelect}>
+                        <Text style={{ color: '#737373', textAlign: 'center' }}>Куда?</Text>
+                    </TouchableOpacity>
+                }
+                
+                
+                <Animated.View style={[styles.formWhere, {bottom: this.state.modalStr,}]}>
+                    <Animated.View style={[styles.container, { transform: [{translateY: shift}], backgroundColor: '#fff' }]}>
                     <View style={{
                         justifyContent: 'center',
                         alignItems: 'center',
@@ -665,6 +900,7 @@ class MainClient extends Component {
                             <Text style={{color: '#fff'}}>Подтвердить</Text>
                         </TouchableOpacity>
                     </View>
+                    </Animated.View>
                 </Animated.View>
                 {/* Address form */}
 
@@ -680,12 +916,14 @@ class MainClient extends Component {
                     top: this.state.modalData,
                     height: '100%',
                     zIndex: 1000000,
+                    width: Dimensions.get('window').width,
                 }]}>
                     <ScrollView>
                         <View style={{
                         justifyContent: 'center',
                         alignItems: 'center',
-                        height: '100%'
+                        height: '100%',
+                        width: Dimensions.get('window').width,
                     }}>
                         <Text style={{
                                 fontSize: 20,
@@ -768,7 +1006,9 @@ class MainClient extends Component {
                                 }} />
                         </View>
                         <View style={[styles.containerInput, {
-                            flexDirection: 'row'
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center'
                         }]}>
                             <Text style={{
                                 marginRight: 20,
@@ -787,6 +1027,8 @@ class MainClient extends Component {
                         <View style={[styles.containerInput, {
                             flexDirection: 'row',
                             zIndex: 1000000,
+                            alignItems: 'center',
+                            justifyContent: 'center'
                         }]}>
                             <Text style={{
                                 marginRight: 20,
@@ -811,8 +1053,8 @@ class MainClient extends Component {
                         <View style={{
                             position: this.state.openSelect == true ? 'absolute' : 'relative',
                             display: this.state.openSelect == true ? 'flex' : 'none',
-                            bottom: Dimensions.get('window').height*0.30,
-                            right: Dimensions.get('window').width*0.09,
+                            bottom: Dimensions.get('window').height < 600 ? Dimensions.get('window').height*0.30 : Dimensions.get('window').height*0.20,
+                            right: Dimensions.get('window').width<350 ? Dimensions.get('window').width*0.09 : Dimensions.get('window').width*0.2,
 
                         }}>
                             <View style={styles.triangle}></View>
@@ -1023,7 +1265,10 @@ const styles = {
         justifyContent: 'space-between',
         alignItems: 'center',
         width: 1000
-    }
+    },
+    container: {
+        flex: 1,
+    },
 }
 
 export default MainClient;

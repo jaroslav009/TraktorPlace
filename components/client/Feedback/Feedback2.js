@@ -32,7 +32,7 @@ class Logout2 extends PureComponent {
                         paddingBottom: 35
                     }}
                     onPress={() => {
-                        this.props.navigation.navigate('MyZakaz');
+                        this.props.navigation.navigate('MainClient');
                     }}>
                         <Image source={cancel} style={{ width: 15, height: 15 }} /> 
                     </TouchableOpacity>

@@ -29,6 +29,11 @@ import MyZakaz from '../components/client/MyZakaz/MyZakaz';
   import HeaderClient from '../components/client/HeaderClient/HeaderClient';
   // Header
 
+  // Card
+  import PaymentMethod from '../components/client/PaymentMethod/PaymentMethod';
+  import AddCard from '../components/client/PaymentMethod/AddCard';
+  // Card
+
 // Client
 
 // Mechanic
@@ -40,15 +45,34 @@ import successZakaz from '../components/client/MyJobs/successZakaz';
 import cancelJob from '../components/client/MyJobs/cancelJob';
 import cancelZakaz from '../components/client/MyJobs/cancelZakaz';
 import Detail from '../components/client/MyJobs/Detail';
+import confirmFinished from '../components/client/MyJobs/confirmFinished';
+import finished from '../components/client/MyJobs/finished';
 
 // Mechanic
 
 export default createAppContainer(
   createStackNavigator({
     // You could add another route here for authentication.
-    // Read more at https://reactnavigation.org/docs/en/auth-flow.html43
-        MyJobs: MyJobs,
-        MainClient: MainClient,
+    // Read more at https://reactnavigation.org/docs/en/auth-flow.html43..
+    HeroScreen: HeroScreen,
+    MainClient: MainClient,
+    AddCard: AddCard,
+    PaymentMethod: PaymentMethod,
+    
+    
+    Register: Register,
+    Login: Login,
+    MyJobs: MyJobs,
+
+
+
+
+    MyZakaz: MyZakaz,
+
+
+    finished: finished,
+
+        confirmFinished: confirmFinished,
         Detail: Detail,
         acceptJob: acceptJob,
         successZakaz: successZakaz,
@@ -56,12 +80,12 @@ export default createAppContainer(
         cancelZakaz: cancelZakaz,
         AccountMechanic: AccountMechanic,
         Account: Account,
-        HeroScreen: HeroScreen,
-        MyZakaz: MyZakaz,
-        Login: Login,
+
+
+
         ResetPassword: ResetPassword,
 
-        Register: Register,
+
 
         // Feedback
         Feedback: Feedback,

@@ -1,6 +1,7 @@
 import React, {PureComponent} from 'react';
 import { Text, View, Image, Dimensions, TouchableOpacity } from 'react-native';
 import * as Font from 'expo-font';
+import * as firebase from 'firebase';
 
 import cancel from '../../../assets/images/cancel.png';
 
@@ -9,17 +10,27 @@ class successZakaz extends PureComponent {
         super(props);
         this.state = {
             loadFont: false,
+            latitude: null,
+            longitude: null
         }
     }
 
     async componentDidMount() {
+        const { navigation } = this.props;
+        await firebase.database().ref("zakaz/"+navigation.getParam('id')).on("value", async (data) => {
+            console.log('data', data.toJSON().latitude);
+            this.setState({
+                latitude: data.toJSON().latitude,
+                longitude: data.toJSON().longitude
+            })
+            
+        });
         await Font.loadAsync({
           'TTCommons-Black': require('../../../assets/fonts/TTCommons-Black.ttf'),
         })
         .then(() => {
             this.setState({ loadFont: true });
         })
-        this.props.fontLoader();
     }
     render() {
         if(this.state.loadFont == true) {
@@ -32,7 +43,12 @@ class successZakaz extends PureComponent {
                         paddingBottom: 35
                     }}
                     onPress={() => {
-                        this.props.navigation.navigate('MainClient');
+                        console.log('userLatitude', this.state.latitude);
+                        
+                        this.props.navigation.navigate('MainClient', {
+                            userLatitude: this.state.latitude,
+                            userLongitude: this.state.longitude
+                        });
                     }}>
                         <Image source={cancel} style={{ width: 15, height: 15 }} /> 
                     </TouchableOpacity>

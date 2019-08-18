@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import { Text, View, Image, ImageBackground, StyleSheet, Dimensions, TouchableOpacity, TextInput, ScrollView, Alert } from 'react-native';
+import { Text, View, Image, Keyboard, StyleSheet, Dimensions, TouchableOpacity, TextInput, ScrollView, Alert, Animated, UIManager  } from 'react-native';
 import * as firebase from 'firebase';
 import * as Font from 'expo-font';
 
@@ -16,6 +16,7 @@ import Arrow from '../../assets/images/left-arrow.png';
 
 import makeid from '../../functions/makeId';
 import validateEmail from '../../functions/validateEmail';
+const { State: TextInputState } = TextInput;
 
 class Register extends Component {
     constructor(props) {
@@ -31,7 +32,9 @@ class Register extends Component {
             errPass: false,
             fontLoaded: false,
             phone: '',
-            errUser: false
+            errUser: false,
+            phoneKeyBoard: false,
+            shift: new Animated.Value(0),
         }
         this.signUp = this.signUp.bind(this);
         this._back = this._back.bind(this);
@@ -129,7 +132,56 @@ class Register extends Component {
         this.props.navigation.goBack()
     }
 
+    componentWillMount() {
+        this.keyboardDidShowSub = Keyboard.addListener('keyboardDidShow', this.handleKeyboardDidShow);
+        this.keyboardDidHideSub = Keyboard.addListener('keyboardDidHide', this.handleKeyboardDidHide);
+      }
+    
+      componentWillUnmount() {
+        this.keyboardDidShowSub.remove();
+        this.keyboardDidHideSub.remove();
+      }
+
+      handleKeyboardDidShow = (event) => {
+          console.log('didShow');
+          
+        const { height: windowHeight } = Dimensions.get('window');
+        const keyboardHeight = event.endCoordinates.height;
+        const currentlyFocusedField = TextInputState.currentlyFocusedField();
+        UIManager.measure(currentlyFocusedField, (originX, originY, width, height, pageX, pageY) => {
+          const fieldHeight = height;
+          const fieldTop = pageY;
+          const gap = (windowHeight - keyboardHeight) - (fieldTop + fieldHeight);
+          if (gap >= 0) {
+            return;
+          }
+          Animated.timing(
+            this.state.shift,
+            {
+              toValue: gap,
+              duration: 1000,
+              useNativeDriver: true,
+            }
+          ).start();
+        });
+      }
+    
+      handleKeyboardDidHide = () => {
+          console.log('hidden key');
+          
+        Animated.timing(
+          this.state.shift,
+          {
+            toValue: 0,
+            duration: 1000,
+            useNativeDriver: true,
+          }
+        ).start();
+      }
+
     render() {
+        const { shift } = this.state;
+
         return (
             <ScrollView style={{ height: Dimensions.get('window').height }}>
                 <Back nav={this.props.navigation} />
@@ -145,6 +197,7 @@ class Register extends Component {
                     }}>
                         <Image source={logoReg} style={{ width: 238, height: 54 }} />
                     </View>
+                    <Animated.View style={[styles.container, { transform: [{translateY: shift}] }]}>
                     <View style={styles.containerForm}>
                         <View>
                             <Text style={[styles.errText, {opacity: this.state.errUser == true ? 1 : 0}]}>Этот пользователь уже существует</Text>
@@ -216,8 +269,8 @@ class Register extends Component {
                             }}
                             />
                         </View>
-                        <View style={{ marginTop: 10 }}>
-                        <Text style={[styles.errText, {opacity: this.state.errPass == true ? 1 : 0}]}>Введите телефон</Text>
+                        <View style={{ marginTop: 10 }} keyboardShouldPersistTaps='handled' contentContainerStyle={{flexGrow: 1}}>
+                            <Text style={[styles.errText, {opacity: this.state.errPass == true ? 1 : 0}]}>Введите телефон</Text>
  
                             <Text style={[
                                 styles.label,
@@ -227,13 +280,15 @@ class Register extends Component {
                             ]}>
                                 Телефон
                             </Text>
-                            <TextInput autoCompleteType="tel" placeholder="Телефон" style={[styles.itemForm]} 
+                            <TextInput keyboardType="numeric" placeholder="Телефон" style={[styles.itemForm]} 
                             onChange={(text) => { 
                                 this.setState({ phone: text.nativeEvent.text });
                             }}
                             />
+
                         </View>
                     </View>
+                    </Animated.View>
                     <View style={{ 
                             width: Dimensions.get('window').width, 
                             alignItems: 'center',
@@ -243,6 +298,7 @@ class Register extends Component {
                             <Text style={{color: '#fff'}}>Подтвердить</Text>
                         </TouchableOpacity>
                     </View>
+                   
                 </View>
             </ScrollView>
         )
@@ -296,7 +352,10 @@ const styles = StyleSheet.create({
         paddingTop: 33,
         paddingLeft: 16,
         paddingBottom: 35
-    }
+    },
+    container: {
+        flex: 1,
+    },
 })
 
 export default Register

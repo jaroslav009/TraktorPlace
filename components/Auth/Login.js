@@ -136,6 +136,18 @@ class Register extends Component {
                                 this.setState({ password: text.nativeEvent.text, errPass: e });
                             }}
                             />
+                            <View style={{
+                                justifyContent: 'flex-end',
+                                alignItems: 'flex-end',
+                                marginTop: 10
+                            }}>
+                                <Text style={{
+                                    color: '#707070',
+                                    fontSize: 13
+                                }}
+                                onPress={() => this.props.navigation.navigate('ResetPassword')} >Забыл пароль</Text>
+                            </View>
+                            
                         </View>
                     </View>
                     <View style={{ 

@@ -19,8 +19,6 @@ class cancelJob extends PureComponent {
 
         console.log(navigation.getParam('id'));
         
-        firebase.database().ref("zakaz/"+navigation.getParam('id')).remove();
-
         await Font.loadAsync({
           'TTCommons-DemiBold': require('../../../assets/fonts/TTCommons-DemiBold.ttf'),
           'TTCommons-Regular': require('../../../assets/fonts/TTCommons-Regular.ttf'),
@@ -31,6 +29,27 @@ class cancelJob extends PureComponent {
             this.setState({ loadFont: true });
         })
     }
+
+    async onCancelJob() {
+        const { navigation } = this.props;
+        console.log('dqwdwqdqw1232rwefgrgrqwgeqgwgweqegewgweqgewqgweq', navigation.getParam('id'));
+        
+        await firebase.database().ref("zakaz/"+navigation.getParam('id')).on("value", async (data) => {
+            console.log('data', data.toJSON().user);
+
+            await firebase.database().ref("zakaz/"+navigation.getParam('id')).remove();
+
+            await firebase.database().ref("users/"+data.toJSON().uidDriver+"/zakaz/"+navigation.getParam('id')).update({
+                active: false,
+            });
+
+            await firebase.database().ref("users/"+data.toJSON().user+"/myZakaz/"+navigation.getParam('id')).update({
+                active: false,
+            });
+        });
+
+    }
+
     render() {
         if(this.state.loadFont == true) {
 
@@ -90,10 +109,11 @@ class cancelJob extends PureComponent {
                             elevation: 1,
                             marginBottom: 20
                         }} onPress={() => {
-                            
+                            this.onCancelJob();
                             this.props.navigation.navigate('cancelZakaz');
                         }}>
-                            <Text style={{color: '#fff', fontFamily: 'TTCommons-DemiBold', fontSize: 18}}>Подтвердить</Text>
+                            <Text style={{color: '#fff', fontFamily: 'TTCommons-DemiBold', fontSize: 18}} 
+                            >Подтвердить</Text>
                         </TouchableOpacity>
                     </View>
                 </ScrollView>

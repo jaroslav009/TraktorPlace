@@ -15,29 +15,48 @@ class MyJobs extends Component {
             loadFont: false,
             load: false,
             jobs: [],
+            something: '',
         }
+        this.begin = this.begin.bind(this);
     }
     async componentDidMount() {
         console.log('width', Dimensions.get('window').width);
-
+        const { navigation } = this.props;
+        this.setState({
+            something: navigation.getParam('id')
+        });
+        console.log('setstate', this.state.something);
+        
         await firebase.auth().onAuthStateChanged(async (user) => {
             if(user) {
                 console.log(`user ${user}`);
                 console.log(`email ${user.email}`);
-                firebase.database().ref("users").orderByChild("confEmail").equalTo(user.email).once("child_added", async (snapshot) => {
+                firebase.database().ref("users").orderByChild("confEmail").equalTo(user.email).on("child_added", async (snapshot) => {
                     console.log('snapshot', snapshot.key);
                     this.setState({ userKey: snapshot.key })
-                    await firebase.database().ref("users/"+snapshot.key+'/myZakaz').on("value", async (data) => {
+                    await firebase.database().ref("users/"+snapshot.key+'/zakaz').on("value", async (data) => {
                         console.log('value my jobs', data.toJSON());
+
+                        if(data.toJSON() == null) {
+                            console.log('this.setState({load: true});', );
+                            
+                            this.setState({load: true});
+                        }
                         let keyJob = Object.keys(data.toJSON());
                         console.log('keyJob', keyJob);
                         let boofer = [];
                         let objBoofer = {};
-                        await keyJob.forEach((value, key) => {
+                        await keyJob.map((value, key) => {
                           console.log('key', key);
                           firebase.database().ref("users/"+data.toJSON()[keyJob[key]].idUser).on("value", (data) => {
                             
-                            if(data.toJSON().myZakaz == undefined) return false;
+                            if(data.toJSON().myZakaz == undefined) {
+                                console.log('myzakaz', data.toJSON().myZakaz);
+                                
+                                this.setState({load: true});
+                                return console.log('laod', this.state.load);
+                                
+                            }
 
                             console.log(keyJob[key]);
                             console.log('data user', data.toJSON().myZakaz[keyJob[key]].publish);
@@ -50,7 +69,9 @@ class MyJobs extends Component {
                               publish: stringDate,
                               avatar: data.toJSON().avatar,
                               active: data.toJSON().myZakaz[keyJob[key]].active,
-                              id: keyJob[key]
+                              id: keyJob[key],
+                              begin: data.toJSON().myZakaz[keyJob[key]].begin,
+                              finished: data.toJSON().myZakaz[keyJob[key]].finished
                             }
                             this.state.jobs.push(objBoofer)
                             boofer.push(objBoofer);
@@ -77,13 +98,37 @@ class MyJobs extends Component {
           'TTCommons-DemiBold': require('../../../assets/fonts/TTCommons-DemiBold.ttf'),
         })
         .then(() => {
+
             this.setState({ loadFont: true });
         })
-        this.props.fontLoader();
     }
+
+    async begin(key, idKey) {
+        console.log('key', this.state.jobs);
+        // this.state.jobs[key].begin = true;
+        this.setState({ load: false });
+        this.setState((state) => {
+            let jobs = state.jobs[key].begin = true;
+            return jobs;
+        });
+        console.log('post', this.state.jobs);
+        await firebase.database().ref("zakaz/"+idKey).on("value", async (data) => {
+            console.log('data', data.toJSON().user);
+
+            await firebase.database().ref("users/"+data.toJSON().uidDriver+"/zakaz/"+idKey).update({
+                begin: true,
+            });
+
+            await firebase.database().ref("users/"+data.toJSON().user+"/myZakaz/"+idKey).update({
+                begin: true,
+            });
+            this.setState({ load: true });
+        });
+    }
+
     render() {
         console.log('render', this.state.load);
-        
+        let boofer = [];
         if(this.state.loadFont == true && this.state.load == true) {
             return (
                 <ScrollView style={{
@@ -112,12 +157,25 @@ class MyJobs extends Component {
 
                     {
                       this.state.jobs.map((value, key) => {
-                          console.log('value', value);
-                          
+                          console.log('value render', value);
+                          if(value.publish == 'NaN:NaN') {
+                              return;
+                          }
+                          if(boofer.indexOf(value.id) != -1) {
+                              return console.log('suka');
+                          }
+                          boofer.push(value.id);
+                          if(value.finished == true) {
+                              return console.log('finished');
+                              
+                          }
                         return (
-                            <View style={{
+                            <View 
+                            key={key}
+                            style={{
                                 justifyContent: 'center',
-                                alignItems: 'center'
+                                alignItems: 'center',
+                                marginBottom: 30,
                             }}>
                                 <View style={{
                                     justifyContent: 'center',
@@ -200,34 +258,107 @@ class MyJobs extends Component {
                                         </View>
         
                                     </View>
-                                    <View style={{
-                                        flexDirection: 'row',
-                                        justifyContent: 'space-between',
-                                        width: Dimensions.get('window').width*0.8,
-                                        paddingLeft: 10,
-                                        paddingRight: 10,
-                                    }}>
-                                        <Text style={{
-                                            fontFamily: 'TTCommons-Bold',
-                                            fontSize: 18,
-                                            color: '#000'
-                                        }}
-                                        onPress={() => this.props.navigation.navigate('cancelJob', { id: value.id })}
-                                        >Отклонить</Text>
-                                        <Text style={{
-                                            fontFamily: 'TTCommons-Bold',
-                                            fontSize: 18,
-                                            color: '#000'
-                                        }}
-                                        onPress={() => this.props.navigation.navigate('acceptJob', { id: value.id })} >Принять</Text>
-                                        <Text style={{
-                                            fontFamily: 'TTCommons-Bold',
-                                            fontSize: 18,
-                                            color: '#000'
-                                        }}
-                                        onPress={() => this.props.navigation.navigate('Detail', { id: value.id })}
-                                        >Детали</Text>
-                                    </View>
+                                    {
+                                        value.active == undefined 
+                                        ? <View style={{
+                                            flexDirection: 'row',
+                                            justifyContent: 'space-between',
+                                            width: Dimensions.get('window').width*0.8,
+                                            paddingLeft: 10,
+                                            paddingRight: 10,
+                                        }}>
+                                           
+                                            <Text style={{
+                                                fontFamily: 'TTCommons-Bold',
+                                                fontSize: 18,
+                                                color: '#000'
+                                            }}
+                                            onPress={() => this.props.navigation.navigate('cancelJob', { 
+                                                id: value.id })}
+                                            >Отклонить</Text>
+                                            <Text style={{
+                                                fontFamily: 'TTCommons-Bold',
+                                                fontSize: 18,
+                                                color: '#000'
+                                            }}
+                                            onPress={() => this.props.navigation.navigate('acceptJob', { id: value.id })} >Принять</Text>
+                                            <Text style={{
+                                                fontFamily: 'TTCommons-Bold',
+                                                fontSize: 18,
+                                                color: '#000'
+                                            }}
+                                            onPress={() => this.props.navigation.navigate('Detail', { id: value.id })}
+                                            >Детали</Text>
+                                        </View> 
+                                        : 
+                                        value.active == true && value.begin != true
+                                        ?
+                                        <View style={{
+                                            flexDirection: 'row',
+                                            justifyContent: 'space-between',
+                                            width: Dimensions.get('window').width*0.8,
+                                            paddingLeft: 10,
+                                            paddingRight: 10,
+                                        }}>
+                                           
+                                            <Text style={{
+                                                fontFamily: 'TTCommons-Bold',
+                                                fontSize: 18,
+                                                color: '#000',
+                                                opacity: 0,
+                                            }}
+                                            
+                                            >Начать</Text>
+                                            <Text style={{
+                                                fontFamily: 'TTCommons-Bold',
+                                                fontSize: 18,
+                                                color: '#000'
+                                            }}
+                                            onPress={() => this.begin(key, value.id)} >Начать</Text>
+                                            <Text style={{
+                                                fontFamily: 'TTCommons-Bold',
+                                                fontSize: 18,
+                                                color: '#000'
+                                            }}
+                                            onPress={() => this.props.navigation.navigate('Detail', { id: value.id })}
+                                            >Детали</Text>
+                                        </View>
+                                        :
+                                        value.begin == true && value.finished != true ?
+                                        <View style={{
+                                            flexDirection: 'row',
+                                            justifyContent: 'space-between',
+                                            width: Dimensions.get('window').width*0.8,
+                                            paddingLeft: 10,
+                                            paddingRight: 10,
+                                        }}>
+                                           
+                                            <Text style={{
+                                                fontFamily: 'TTCommons-Bold',
+                                                fontSize: 18,
+                                                color: '#000',
+                                            }}
+                                            onPress={() => this.props.navigation.navigate('confirmFinished', { id: value.id })}
+                                            >Завершить</Text>
+                                            <Text style={{
+                                                fontFamily: 'TTCommons-Bold',
+                                                fontSize: 18,
+                                                color: '#000',
+                                                opacity: 0,
+                                            }}
+                                            onPress={() => this.begin(key)} >Начать</Text>
+                                            <Text style={{
+                                                fontFamily: 'TTCommons-Bold',
+                                                fontSize: 18,
+                                                color: '#000'
+                                            }}
+                                            onPress={() => this.props.navigation.navigate('Detail', { id: value.id })}
+                                            >Детали</Text>
+                                        </View>
+                                        :
+                                        <View></View>
+                                    }
+                                    
                                 </View>
                             </View>
                         )

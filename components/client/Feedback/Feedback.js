@@ -3,19 +3,47 @@ import { Text, View, TextInput, Dimensions, TouchableOpacity, ScrollView, StyleS
 import Back from '../../Back';
 import * as Font from 'expo-font';
 import { Avatar, Rating } from 'react-native-elements';
+import * as firebase from 'firebase';
+
+import LoadIndicator from '../../../constants/LoadIndicator';
 
 class Feedback extends PureComponent {
     constructor(props) {
         super(props);
         this.state = {
             loadFont: false,
-            rating: 2.5
+            load: false,
+            rating: 2.5,
         }
         this.ratingCompleted = this.ratingCompleted.bind(this);
         this.feedback = this.feedback.bind(this);
     }
 
     async componentDidMount() {
+        const { navigation } = this.props;
+        await firebase.database().ref("zakaz/"+navigation.getParam('id')).on("value", async (data) => {
+            console.log('data', data.toJSON().user);
+
+            await firebase.database().ref("users/"+data.toJSON().uidDriver).on("value", async (dataUser) => {
+                console.log('data123', dataUser);
+
+                this.setState({ 
+                    avatar: dataUser.toJSON().avatar,
+                    name: dataUser.toJSON().name,
+                    surname: dataUser.toJSON().surname,
+                    ratingUser: dataUser.toJSON().rating,
+                    uidDriver: data.toJSON().uidDriver,
+                    countRating: dataUser.toJSON().countRating,
+                    load: true,
+
+                });
+                
+                console.log('countRating', this.state.countRating);
+
+            });
+
+            
+        });
         await Font.loadAsync({
             'TTCommons-Bold': require('../../../assets/fonts/TTCommons-Bold.ttf'),
             'TTCommons-Regular': require('../../../assets/fonts/TTCommons-Regular.ttf'),
@@ -33,12 +61,40 @@ class Feedback extends PureComponent {
         this.setState({ rating: rat })
     }
 
-    feedback() {
+    async feedback() {
+        const { navigation } = this.props;
+        let boofer;
+        let count = this.state.countRating;
+        if(this.state.ratingUser == undefined) {
+            boofer = this.state.rating;
+            count = 1;
+        } else {
+            boofer = (this.state.ratingUser+this.state.rating)/2;
+            count++;
+            console.log(`rating ${this.state.rating} 
+                            count ${this.state.ratingUser}`);
+            
+        }
+        firebase.database().ref("users/"+this.state.uidDriver).update({
+            rating: boofer,
+            countRating: count,
+        })
+        await firebase.database().ref("zakaz/"+navigation.getParam('id')).on("value", async (data) => {
+            console.log('data', data.toJSON().user);
+
+            await firebase.database().ref("zakaz/"+navigation.getParam('id')).remove();
+
+            await firebase.database().ref("users/"+data.toJSON().uidDriver+"/zakaz/"+navigation.getParam('id')).remove();
+
+            await firebase.database().ref("users/"+data.toJSON().user+"/myZakaz/"+navigation.getParam('id')).remove()
+        });
+
+
         this.props.navigation.navigate('Feedback2');
     }
 
     render() {
-        if(this.state.loadFont == true) {
+        if(this.state.loadFont == true && this.state.load == true) {
 
             return (
                 <ScrollView>
@@ -48,17 +104,22 @@ class Feedback extends PureComponent {
                         alignItems: 'center',
                         marginTop: 0
                     }}>
-                        <Avatar
-                            size="xlarge"
-                            rounded
-                            title="TP"
-                            activeOpacity={0.7}
-                        />
+                       
+                        {
+                            this.state.avatar == '' ? <Avatar rounded title="TP" size="xlarge" /> : <Avatar
+                                rounded
+                                size="xlarge"
+                                source={{
+                                uri:
+                                    this.state.avatar,
+                                }}
+                            />
+                        }
                         <Text style={{
                             color: '#000',
                             fontFamily: 'TTCommons-Bold',
                             marginTop: 15
-                        }}>Алексей Иванов</Text>
+                        }}>{this.state.name} {this.state.surname}</Text>
                     </View>
                     <View style={{
                         marginTop: 20
@@ -94,19 +155,20 @@ class Feedback extends PureComponent {
                     </View>
                     <View style={{
                         justifyContent: 'center',
-                        alignItems: 'center'
+                        alignItems: 'center',
+                        marginTop: Dimensions.get('window').height*0.1
                     }}>
                         <TouchableOpacity style={styles.btn} onPress={() => {
                             this.feedback()
                         }}>
-                            <Text style={{color: '#fff', fontFamily: 'TTCommons-Regular',}}>Отправить</Text>
+                            <Text style={{color: '#fff', fontFamily: 'TTCommons-DemiBold',}}>Отправить</Text>
                         </TouchableOpacity>
                     </View>
                 </ScrollView>
             )
         }
         else {
-            return <View></View>
+            return <LoadIndicator />
         }
     }
 }

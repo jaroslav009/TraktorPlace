@@ -4,6 +4,8 @@ import * as firebase from 'firebase';
 
 import burger from '../../../assets/images/burger.png'
 
+import makeid from '../../../functions/makeId';
+
 export default class MechanicHeader extends Component {
 
     constructor(props) {
@@ -140,7 +142,9 @@ export default class MechanicHeader extends Component {
 
                                     <TouchableHighlight underlayColor="#fff" style={{zIndex: 100000}}
                                     onPress={() => {
-                                        this.props.navigation.navigate('MyJobs')
+                                        this.props.navigation.navigate('MyJobs', {
+                                            id: makeid(5),
+                                        })
                                     }}
                                     >
                                         <Text style={[styles.darkText, {
