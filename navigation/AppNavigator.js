@@ -10,29 +10,29 @@ import MainClient from '../components/client/Main';
 import Account from '../components/client/Account/Account';
 import MyZakaz from '../components/client/MyZakaz/MyZakaz';
 
-  // Feedback
-  import Feedback from '../components/client/Feedback/Feedback';
-  import Feedback2 from '../components/client/Feedback/Feedback2';
-  // Feedback
+	// Feedback
+	import Feedback from '../components/client/Feedback/Feedback';
+	import Feedback2 from '../components/client/Feedback/Feedback2';
+	// Feedback
 
-  // Logout
-  import Logout1 from '../components/client/Logout/Logout1';
-  import Logout2 from '../components/client/Logout/Logout2';
-  // Logout
+	// Logout
+	import Logout1 from '../components/client/Logout/Logout1';
+	import Logout2 from '../components/client/Logout/Logout2';
+	// Logout
 
-  // Help
-  import Help from '../components/client/Help/Help';
-  import HelpItem from '../components/client/Help/HelpItem';
-  // Help
+	// Help
+	import Help from '../components/client/Help/Help';
+	import HelpItem from '../components/client/Help/HelpItem';
+	// Help
 
-  // Header
-  import HeaderClient from '../components/client/HeaderClient/HeaderClient';
-  // Header
+	// Header
+	import HeaderClient from '../components/client/HeaderClient/HeaderClient';
+	// Header
 
-  // Card
-  import PaymentMethod from '../components/client/PaymentMethod/PaymentMethod';
-  import AddCard from '../components/client/PaymentMethod/AddCard';
-  // Card
+	// Card
+	import PaymentMethod from '../components/client/PaymentMethod/PaymentMethod';
+	import AddCard from '../components/client/PaymentMethod/AddCard';
+	// Card
 
 // Client
 
@@ -51,65 +51,49 @@ import finished from '../components/client/MyJobs/finished';
 // Mechanic
 
 export default createAppContainer(
-  createStackNavigator({
-    // You could add another route here for authentication.
-    // Read more at https://reactnavigation.org/docs/en/auth-flow.html43..
-    HeroScreen: HeroScreen,
-    MainClient: MainClient,
-    AddCard: AddCard,
-    PaymentMethod: PaymentMethod,
-    
-    
-    Register: Register,
-    Login: Login,
-    MyJobs: MyJobs,
+	createStackNavigator({
+		PaymentMethod: PaymentMethod,
+			HeroScreen: HeroScreen,
+			MainClient: MainClient,
+			AddCard: AddCard,
+			
+			Register: Register,
+			Login: Login,
+			MyJobs: MyJobs,
+			MyZakaz: MyZakaz,
+			finished: finished,
 
+			confirmFinished: confirmFinished,
+			Detail: Detail,
+			acceptJob: acceptJob,
+			successZakaz: successZakaz,
+			cancelJob: cancelJob,
+			cancelZakaz: cancelZakaz,
+			AccountMechanic: AccountMechanic,
+			Account: Account,
+			ResetPassword: ResetPassword,
+			// Feedback
+			Feedback: Feedback,
+			Feedback2: Feedback2,
+			// Feedback
 
+			// Logout
+			Logout1: Logout1,
+			Logout2: Logout2,
+			// Logout
 
+			// Help
+			Help: Help,
+			HelpItem: HelpItem,
+			// Help
 
-    MyZakaz: MyZakaz,
+			// Header
+			HeaderClient: HeaderClient,
+			// Header
+		},
 
-
-    finished: finished,
-
-        confirmFinished: confirmFinished,
-        Detail: Detail,
-        acceptJob: acceptJob,
-        successZakaz: successZakaz,
-        cancelJob: cancelJob,
-        cancelZakaz: cancelZakaz,
-        AccountMechanic: AccountMechanic,
-        Account: Account,
-
-
-
-        ResetPassword: ResetPassword,
-
-
-
-        // Feedback
-        Feedback: Feedback,
-        Feedback2: Feedback2,
-        // Feedback
-
-        // Logout
-        Logout1: Logout1,
-        Logout2: Logout2,
-        // Logout
-
-        // Help
-        Help: Help,
-        HelpItem: HelpItem,
-        // Help
-
-        // Header
-        HeaderClient: HeaderClient,
-        // Header
-
-
-      },
-      {
-        headerMode: 'none',
-      }
-  )
+		{
+			headerMode: 'none',
+		}
+	)
 );
