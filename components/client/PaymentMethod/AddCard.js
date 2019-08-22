@@ -164,12 +164,10 @@ export default class AddCard extends Component {
                                             <View>
                                                 <Image source={{uri: cardType.image}} style={{width: 57, height: 35, marginHorizontal: 5}} />
                                             </View>
-
                                         </TouchableOpacity>
                                     );
                                 })}
                             </View>
-
                         </View>
                         <TouchableOpacity style={{
                           width: Dimensions.get('window').width*60/100,
@@ -206,11 +204,9 @@ export default class AddCard extends Component {
                     </View>
                 </TouchableOpacity>
             </View>
-
     )
   }
 }
-
 const styles = StyleSheet.create({
     background: {
         position: 'absolute',
@@ -237,7 +233,6 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     text: {
-
     },
     card: {
         marginHorizontal: 10,
@@ -259,9 +254,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         color: '#fff'
     }
-
 });
-
 // function cacheImages(images) {
 //     return images.map(image => Exponent.Asset.fromModule(image).downloadAsync());
 // }

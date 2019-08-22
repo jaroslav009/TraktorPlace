@@ -52,44 +52,48 @@ import finished from '../components/client/MyJobs/finished';
 
 export default createAppContainer(
 	createStackNavigator({
+		HeroScreen: HeroScreen,
+		Register: Register,
+		MainClient: MainClient,
+		MyZakaz: MyZakaz,
+		Login: Login,
+		
+		
+		MyJobs: MyJobs,
+		
+		Account: Account,
 		PaymentMethod: PaymentMethod,
-			HeroScreen: HeroScreen,
-			MainClient: MainClient,
-			AddCard: AddCard,
-			
-			Register: Register,
-			Login: Login,
-			MyJobs: MyJobs,
-			MyZakaz: MyZakaz,
-			finished: finished,
+		
+		AddCard: AddCard,
+		finished: finished,
 
-			confirmFinished: confirmFinished,
-			Detail: Detail,
-			acceptJob: acceptJob,
-			successZakaz: successZakaz,
-			cancelJob: cancelJob,
-			cancelZakaz: cancelZakaz,
-			AccountMechanic: AccountMechanic,
-			Account: Account,
-			ResetPassword: ResetPassword,
-			// Feedback
-			Feedback: Feedback,
-			Feedback2: Feedback2,
-			// Feedback
+		confirmFinished: confirmFinished,
+		Detail: Detail,
+		acceptJob: acceptJob,
+		successZakaz: successZakaz,
+		cancelJob: cancelJob,
+		cancelZakaz: cancelZakaz,
+		AccountMechanic: AccountMechanic,
+		
+		ResetPassword: ResetPassword,
+		// Feedback
+		Feedback: Feedback,
+		Feedback2: Feedback2,
+		// Feedback
 
-			// Logout
-			Logout1: Logout1,
-			Logout2: Logout2,
-			// Logout
+		// Logout
+		Logout1: Logout1,
+		Logout2: Logout2,
+		// Logout
 
-			// Help
-			Help: Help,
-			HelpItem: HelpItem,
-			// Help
+		// Help
+		Help: Help,
+		HelpItem: HelpItem,
+		// Help
 
-			// Header
-			HeaderClient: HeaderClient,
-			// Header
+		// Header
+		HeaderClient: HeaderClient,
+		// Header
 		},
 
 		{

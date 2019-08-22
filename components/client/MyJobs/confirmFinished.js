@@ -28,7 +28,25 @@ class acceptJob extends PureComponent {
         
         await firebase.database().ref("zakaz/"+navigation.getParam('id')).on("value", async (data) => {
             console.log('data', data.toJSON().user);
-
+            await firebase.database().ref("users/"+data.toJSON().user).on("value", async (dataUser) => {
+                fetch('https://exp.host/--/api/v2/push/send', {
+                    method: 'POST',
+                    headers: {
+                    Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        "to": dataUser.toJSON().expoToken,
+                        "title": "Работа завершена",
+                        "sound": "default",
+                        "body": ""
+                    }),
+                })
+                .then(() => {
+                    console.log('push notififaction send');
+                })
+            });
+            
             await firebase.database().ref("users/"+data.toJSON().uidDriver+"/zakaz/"+navigation.getParam('id')).update({
                 finished: true,
             });

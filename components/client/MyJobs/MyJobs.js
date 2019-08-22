@@ -18,6 +18,7 @@ class MyJobs extends Component {
             something: '',
         }
         this.begin = this.begin.bind(this);
+        this.update = this.update.bind(this);
     }
     async componentDidMount() {
         console.log('width', Dimensions.get('window').width);
@@ -31,10 +32,10 @@ class MyJobs extends Component {
             if(user) {
                 console.log(`user ${user}`);
                 console.log(`email ${user.email}`);
-                firebase.database().ref("users").orderByChild("confEmail").equalTo(user.email).on("child_added", async (snapshot) => {
+                firebase.database().ref("users").orderByChild("confEmail").equalTo(user.email).once("child_added", async (snapshot) => {
                     console.log('snapshot', snapshot.key);
                     this.setState({ userKey: snapshot.key })
-                    await firebase.database().ref("users/"+snapshot.key+'/zakaz').on("value", async (data) => {
+                    await firebase.database().ref("users/"+snapshot.key+'/zakaz').once("value", async (data) => {
                         console.log('value my jobs', data.toJSON());
 
                         if(data.toJSON() == null) {
@@ -48,7 +49,7 @@ class MyJobs extends Component {
                         let objBoofer = {};
                         await keyJob.map((value, key) => {
                           console.log('key', key);
-                          firebase.database().ref("users/"+data.toJSON()[keyJob[key]].idUser).on("value", (data) => {
+                          firebase.database().ref("users/"+data.toJSON()[keyJob[key]].idUser).once("value", (data) => {
                             
                             if(data.toJSON().myZakaz == undefined) {
                                 console.log('myzakaz', data.toJSON().myZakaz);
@@ -59,23 +60,33 @@ class MyJobs extends Component {
                             }
 
                             console.log(keyJob[key]);
-                            console.log('data user', data.toJSON().myZakaz[keyJob[key]].publish);
-                            let date = new Date(data.toJSON().myZakaz[keyJob[key]].publish);
-                            let stringDate = date.getHours() + ':' + date.getMinutes();
-                            console.log('stringDate',  stringDate);
-                            objBoofer = {
-                              name: data.toJSON().name,
-                              surname: data.toJSON().surname,
-                              publish: stringDate,
-                              avatar: data.toJSON().avatar,
-                              active: data.toJSON().myZakaz[keyJob[key]].active,
-                              id: keyJob[key],
-                              begin: data.toJSON().myZakaz[keyJob[key]].begin,
-                              finished: data.toJSON().myZakaz[keyJob[key]].finished
+                            if(data.toJSON().myZakaz[keyJob[key]] != undefined) {
+                                console.log('data user', data.toJSON().myZakaz[keyJob[key]].publish);
+                                let date = new Date(data.toJSON().myZakaz[keyJob[key]].publish);
+                                let stringDate = date.getHours() + ':' + date.getMinutes();
+                                console.log('stringDate',  stringDate);
+                                objBoofer = {
+                                name: data.toJSON().name,
+                                surname: data.toJSON().surname,
+                                publish: stringDate,
+                                avatar: data.toJSON().avatar,
+                                active: data.toJSON().myZakaz[keyJob[key]].active,
+                                id: keyJob[key],
+                                begin: data.toJSON().myZakaz[keyJob[key]].begin,
+                                finished: data.toJSON().myZakaz[keyJob[key]].finished
+                                }
+
+                                this.setState(state => {
+                                    const list = state.jobs.push(objBoofer);
+                              
+                                    return {
+                                      list,
+                                    };
+                                });
+                                boofer.push(objBoofer);
+                                console.log('jobs', this.state.jobs, ' load', this.state.load);
                             }
-                            this.state.jobs.push(objBoofer)
-                            boofer.push(objBoofer);
-                            console.log('jobs', this.state.jobs, ' load', this.state.load);
+                            
                           })
                           
 
@@ -112,7 +123,7 @@ class MyJobs extends Component {
             return jobs;
         });
         console.log('post', this.state.jobs);
-        await firebase.database().ref("zakaz/"+idKey).on("value", async (data) => {
+        await firebase.database().ref("zakaz/"+idKey).once("value", async (data) => {
             console.log('data', data.toJSON().user);
 
             await firebase.database().ref("users/"+data.toJSON().uidDriver+"/zakaz/"+idKey).update({
@@ -123,6 +134,90 @@ class MyJobs extends Component {
                 begin: true,
             });
             this.setState({ load: true });
+        });
+    }
+
+    async update() {
+
+        console.log('width', Dimensions.get('window').width);
+        const { navigation } = this.props;
+        this.setState({
+            load: false
+        });
+        console.log('setstate', this.state.something);
+        
+        await firebase.auth().onAuthStateChanged(async (user) => {
+            if(user) {
+                firebase.database().ref("users").orderByChild("confEmail").equalTo(user.email).once("child_added", async (snapshot) => {
+                    this.setState({ userKey: snapshot.key })
+                    await firebase.database().ref("users/"+snapshot.key+'/zakaz').once("value", async (data) => {
+
+                        if(data.toJSON() == null) {
+                            this.setState({load: true});
+                        }
+                        let keyJob = Object.keys(data.toJSON());
+                        console.log('keyJob', keyJob);
+                        let boofer = [];
+                        let objBoofer = {};
+                        this.setState(state => {
+                            const list = state.jobs = [];
+                      
+                            return {
+                              list,
+                            };
+                        });
+                        await keyJob.map((value, key) => {
+                          console.log('key', key);
+                          firebase.database().ref("users/"+data.toJSON()[keyJob[key]].idUser).once("value", (data) => {
+                            
+                            if(data.toJSON().myZakaz == undefined) {
+                                console.log('myzakaz', data.toJSON().myZakaz);
+                                
+                                this.setState({load: true});
+                                return console.log('laod', this.state.load);
+                                
+                            }
+
+                            console.log(keyJob[key]);
+                            if(data.toJSON().myZakaz[keyJob[key]] != undefined) {
+                                console.log('data user', data.toJSON().myZakaz[keyJob[key]].publish);
+                                let date = new Date(data.toJSON().myZakaz[keyJob[key]].publish);
+                                let stringDate = date.getHours() + ':' + date.getMinutes();
+                                console.log('stringDate',  stringDate);
+                                objBoofer = {
+                                name: data.toJSON().name,
+                                surname: data.toJSON().surname,
+                                publish: stringDate,
+                                avatar: data.toJSON().avatar,
+                                active: data.toJSON().myZakaz[keyJob[key]].active,
+                                id: keyJob[key],
+                                begin: data.toJSON().myZakaz[keyJob[key]].begin,
+                                finished: data.toJSON().myZakaz[keyJob[key]].finished
+                                }
+                                this.setState(state => {
+                                    const list = state.jobs.push(objBoofer);
+                              
+                                    return {
+                                      list,
+                                    };
+                                });
+                                boofer.push(objBoofer);
+                                console.log('jobs', this.state.jobs, ' load', this.state.load);
+                            }
+                            
+                          })
+                          
+
+                        })
+                        setTimeout(() => {
+                            this.setState({load: true});
+                        }, 2000)
+                        
+
+                        
+                    })
+                });
+            }
         });
     }
 
@@ -137,22 +232,35 @@ class MyJobs extends Component {
                     <View style={{
                         flexDirection: 'row',
                         alignItems: 'center',
-                        paddingBottom: 20
+                        paddingBottom: 20,
+                        justifyContent: 'space-between'
                     }}>
-                        <TouchableOpacity style={{
-                            paddingTop: 33,
-                            paddingLeft: 16,
-                            paddingBottom: 35
-                        }} onPress={() => {
-                            this.props.navigation.navigate('MainClient');
+                        <View style={{
+                            flexDirection: 'row',
+                            alignItems: 'center'
                         }}>
-                            <Image source={Arrow} style={{ width: 15, height: 15 }} />
-                        </TouchableOpacity>
+                            <TouchableOpacity style={{
+                                paddingTop: 33,
+                                paddingLeft: 16,
+                                paddingBottom: 35
+                            }} onPress={() => {
+                                this.props.navigation.navigate('MainClient');
+                            }}>
+                                <Image source={Arrow} style={{ width: 15, height: 15 }} />
+                            </TouchableOpacity>
+                            <Text style={{
+                                fontFamily: 'TTCommons-DemiBold',
+                                fontSize: 20,
+                                marginLeft: 30
+                            }}>Моя работа</Text>
+                        </View>
                         <Text style={{
                             fontFamily: 'TTCommons-DemiBold',
                             fontSize: 20,
-                            marginLeft: 30
-                        }}>Моя работа</Text>
+                            marginRight: 30,
+                            alignItems: 'center'
+                        }}
+                        onPress={() => this.update()}>Обновить</Text>
                     </View>
 
                     {

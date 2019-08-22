@@ -122,7 +122,7 @@ export default class HeaderClient extends Component {
                                           fontSize: 17,
                                           fontFamily: 'TTCommons-DemiBold'
                                       }}>
-                                          +7 (985) 542 5216
+                                          {this.state.phone}
                                       </Text>
                                   </View>
                                   <TouchableHighlight
@@ -152,7 +152,7 @@ export default class HeaderClient extends Component {
                                           }]}>Мои заказы</Text>
                                   </TouchableHighlight>
 
-                                  <TouchableHighlight underlayColor="#fff" style={{zIndex: 100000}} onPress={() => {
+                                  {/* <TouchableHighlight underlayColor="#fff" style={{zIndex: 100000}} onPress={() => {
                                           this.props.navigation.navigate('PaymentMethod')
                                       }}>
                                       <Text style={[styles.darkText, {
@@ -160,7 +160,7 @@ export default class HeaderClient extends Component {
                                           marginTop: 20,
                                           }
                                           ]}>Способ оплаты</Text>
-                                  </TouchableHighlight>
+                                  </TouchableHighlight> */}
 
                                   <TouchableHighlight underlayColor="#fff" style={{zIndex: 100000}} onPress={() => {
                                           this.props.navigation.navigate('Help')

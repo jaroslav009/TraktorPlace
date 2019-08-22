@@ -283,7 +283,7 @@ class MainClient extends Component {
                 easing: Easing.linear
             },
         ).start();
-        this.setState({ addressForm: true, confirmAddress: this.state.address });
+        this.setState({ addressForm: true, confirmAddress: this.state.address, dataForm: false });
     }
 
     dataBtn() {
@@ -462,7 +462,7 @@ class MainClient extends Component {
     componentWillMount() {
         this.keyboardDidShowSub = Keyboard.addListener('keyboardDidShow', this.handleKeyboardDidShow);
         this.keyboardDidHideSub = Keyboard.addListener('keyboardDidHide', this.handleKeyboardDidHide);
-      }
+    }
 
     handleKeyboardDidShow = (event) => {
           console.log('didShow');
@@ -502,11 +502,6 @@ class MainClient extends Component {
     }
     // KeyBoard
 
-    // listenerNotific() {
-    //     Alert.alert('dqwdwqdwqdwqqwddwqwqddwq');       
-        
-    // }
-
     handleAppStateChange = (nextAppState) => {
         firebase.database().ref("positionDriver/"+this.state.userKey).remove();  
     }
@@ -538,10 +533,6 @@ class MainClient extends Component {
         firebase.database().ref("users/"+this.state.userKey).update({
             expoToken: token,
         })
-        // let update = {};
-        // updates['/expoToken'] = token;
-        // firebase.database().ref("/users").child(user.ui).updates(updates)
-        
     }
 
     render() {
@@ -665,15 +656,6 @@ class MainClient extends Component {
                                     this.pressDriver(key)
                                 }}
                             >
-                                {/* <TouchableOpacity style={{
-                                    height: 12,
-                                    width: 12,
-                                    borderRadius: 50,
-                                    backgroundColor: '#1C1C1C',
-                                    position: 'absolute',
-                                    zIndex: 123123123123
-                                }}
-                                ></TouchableOpacity> */}
                                 <Image source={car} style={{
                                     width: 20,
                                     height: 20

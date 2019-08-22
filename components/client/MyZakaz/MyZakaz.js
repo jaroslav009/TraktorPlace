@@ -3,6 +3,7 @@ import { Text, View, Dimensions, TouchableOpacity, StyleSheet, ScrollView, Image
 import * as Font from 'expo-font';
 import { Avatar } from 'react-native-elements';
 import * as firebase from 'firebase';
+import { Linking } from 'react-native';
 
 import Arrow from '../../../assets/images/left-arrow.png';
 import LoadIndicator from '../../../constants/LoadIndicator';
@@ -16,8 +17,11 @@ class MyZakaz extends Component {
             jobs: [],
         }
         this.removeZakaz = this.removeZakaz.bind(this);
+        this.update = this.update.bind(this);
     }
     async componentDidMount() {
+        
+
         console.log('width', Dimensions.get('window').width);
 
         await firebase.auth().onAuthStateChanged(async (user) => {
@@ -26,10 +30,10 @@ class MyZakaz extends Component {
             if(user) {
                 console.log(`user ${user}`);
                 console.log(`email ${user.email}`);
-                await firebase.database().ref("users").orderByChild("confEmail").equalTo(user.email).on("child_added", async (snapshot) => {
+                await firebase.database().ref("users").orderByChild("confEmail").equalTo(user.email).once("child_added", async (snapshot) => {
                     console.log('snapshot', snapshot.key);
                     this.setState({ userKey: snapshot.key })
-                    await firebase.database().ref("users/"+snapshot.key+'/myZakaz').on("value", async (data) => {
+                    await firebase.database().ref("users/"+snapshot.key+'/myZakaz').once("value", async (data) => {
 
                         if(data.toJSON() == null) {                            
                             this.setState({load: true});
@@ -46,7 +50,7 @@ class MyZakaz extends Component {
                           let idUserKey = data.toJSON().idUser;
                           console.log('idUserKey', idUserKey);
                           
-                          firebase.database().ref("users/"+data.toJSON()[keyZakaz].idUser).on("value", (data) => {
+                          firebase.database().ref("users/"+data.toJSON()[keyZakaz].idUser).once("value", (data) => {
                             console.log('data123321         ', data.toJSON());
                             if(data.toJSON() == undefined || data.toJSON() == null) {
 
@@ -70,7 +74,13 @@ class MyZakaz extends Component {
                                             finished: data.toJSON().zakaz[keyZakaz].finished,
                                             id: keyZakaz
                                         }
-                                        this.state.jobs.push(objBoofer)
+                                        this.setState(state => {
+                                            const list = state.jobs.push(objBoofer);
+                                      
+                                            return {
+                                              list,
+                                            };
+                                        });
                                         boofer.push(objBoofer);
                                         console.log('jobs', this.state.jobs, ' load', this.state.load);
                                     }   
@@ -106,7 +116,7 @@ class MyZakaz extends Component {
     async removeZakaz(id, key) {
         this.setState({ load: false });
         console.log('id', id);
-        await firebase.database().ref("users/"+this.state.userKey+'/myZakaz/'+id).on("value", async (data) => {
+        await firebase.database().ref("users/"+this.state.userKey+'/myZakaz/'+id).once("value", async (data) => {
             console.log('dataremovezakaz1', data);
             console.log('dataremovezakaz2', data.toJSON().idUser);
             console.log('dataremovezakaz3', this.state.userKey);
@@ -129,6 +139,72 @@ class MyZakaz extends Component {
         });
     }
 
+    buy() {
+        Linking.openURL('https://money.yandex.ru/to/410019147197426?_openstat=iget%3Btransfer%3Bicon');
+    }
+
+    async update() {
+        this.setState({load: false});
+        await firebase.database().ref("users/"+this.state.userKey+'/myZakaz').once("value", async (data) => {
+
+            if(data.toJSON() == null) {                            
+                this.setState({load: true});
+            }
+            let keyJob = Object.keys(data.toJSON());
+            let boofer = [];
+            let objBoofer = {};
+            this.setState(state => {
+                const list = state.jobs = [];
+          
+                return {
+                  list,
+                };
+            });
+            keyJob.map((value, key) => {
+              let keyZakaz = keyJob[key];
+              
+              let idUserKey = data.toJSON().idUser;
+              
+              firebase.database().ref("users/"+data.toJSON()[keyZakaz].idUser).once("value", (data) => {
+                if(data.toJSON() == undefined || data.toJSON() == null) {}
+                else {
+                    console.log('data d12 3123 12', data, '  ', idUserKey);
+                    if(data.toJSON().zakaz != undefined) {
+                        if(data.toJSON().zakaz[keyZakaz] != undefined) {
+                            objBoofer = {
+                                name: data.toJSON().name,
+                                surname: data.toJSON().surname,
+                                avatar: data.toJSON().avatar,
+                                active: data.toJSON().zakaz[keyZakaz].active,
+                                finished: data.toJSON().zakaz[keyZakaz].finished,
+                                id: keyZakaz
+                            }
+                            this.setState(state => {
+                                const list = state.jobs.push(objBoofer);
+                          
+                                return {
+                                  list,
+                                };
+                            });
+                            // this.state.jobs.push(objBoofer)
+                            boofer.push(objBoofer);
+                            console.log('objBoofer', objBoofer);
+                            
+                        }   
+                    }
+                        
+                }
+            })
+                
+
+            })
+            setTimeout(() => {
+                this.setState({load: true});
+            }, 3000)
+            
+        })
+    }
+
     render() {
         let boofer = [];
         if(this.state.loadFont == true && this.state.load == true) {
@@ -140,22 +216,35 @@ class MyZakaz extends Component {
                     <View style={{
                         flexDirection: 'row',
                         alignItems: 'center',
-                        paddingBottom: 20
+                        paddingBottom: 20,
+                        justifyContent: 'space-between'
                     }}>
-                        <TouchableOpacity style={{
-                            paddingTop: 33,
-                            paddingLeft: 16,
-                            paddingBottom: 35
-                        }} onPress={() => {
-                            this.props.navigation.navigate('MainClient');
+                        <View style={{
+                            flexDirection: 'row',
+                            alignItems: 'center'
                         }}>
-                            <Image source={Arrow} style={{ width: 15, height: 15 }} />
-                        </TouchableOpacity>
+                            <TouchableOpacity style={{
+                                paddingTop: 33,
+                                paddingLeft: 16,
+                                paddingBottom: 35
+                            }} onPress={() => {
+                                this.props.navigation.navigate('MainClient');
+                            }}>
+                                <Image source={Arrow} style={{ width: 15, height: 15 }} />
+                            </TouchableOpacity>
+                            <Text style={{
+                                fontFamily: 'TTCommons-DemiBold',
+                                fontSize: 20,
+                                marginLeft: 30
+                            }}>Мои заказы</Text>
+                        </View>
                         <Text style={{
                             fontFamily: 'TTCommons-DemiBold',
                             fontSize: 20,
-                            marginLeft: 30
-                        }}>Мои заказы</Text>
+                            marginRight: 30,
+                            alignItems: 'center'
+                        }}
+                        onPress={() => this.update()}>Обновить</Text>
                     </View>    
                     {
                       this.state.jobs.map((value, key) => {
@@ -267,13 +356,28 @@ class MyZakaz extends Component {
                                                 }}>
                                                     Ожидает подтверждения
                                                 </Text>
-                                                : value.active == true && value.finished != true ? <Text style={{
-                                                    color: '#FFCC47',
-                                                    fontFamily: 'TTCommons-Medium',
-                                                    fontSize: Dimensions.get('window').width < 330 ? 13 : 13
+                                                : value.active == true && value.finished != true ? 
+                                                <View style={{
+                                                    flexDirection: 'row',
+                                                    justifyContent: 'space-between'
                                                 }}>
-                                                    Выполняется
-                                                </Text> 
+                                                    <Text style={{
+                                                        color: '#333',
+                                                        fontFamily: 'TTCommons-Medium',
+                                                        fontSize: Dimensions.get('window').width < 330 ? 13 : 13,
+                                                        marginRight: 10
+                                                    }}
+                                                    onPress={() => this.buy()}>
+                                                        Оплатить
+                                                    </Text>
+                                                    <Text style={{
+                                                        color: '#FFCC47',
+                                                        fontFamily: 'TTCommons-Medium',
+                                                        fontSize: Dimensions.get('window').width < 330 ? 13 : 13
+                                                    }}>
+                                                        Выполняется
+                                                    </Text> 
+                                                </View>
                                                 : value.active == false && value.finished != true ? <Text style={{
                                                     color: '#DC4732',
                                                     fontFamily: 'TTCommons-Medium',

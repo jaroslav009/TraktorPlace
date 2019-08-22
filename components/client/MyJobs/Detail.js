@@ -39,37 +39,46 @@ export default class Detal extends Component {
         console.log(navigation.getParam('id'));
         await firebase.database().ref("zakaz/"+navigation.getParam('id')).on("value", async (data) => {
             console.log('data', data.toJSON());
+            firebase.database().ref("users/"+data.toJSON().user).on("value", async (dataUser) => {
+                console.log('dataUser', dataUser.toJSON().phone);
+                
+                this.setState({
+                    address: data.toJSON().address,
+                    checked: data.toJSON().checked,
+                    checkedZap: data.toJSON().checkedZap,
+                    happened: data.toJSON().happened,
+                    marka: data.toJSON().marka,
+                    model: data.toJSON().model,
+                    time: data.toJSON().time,
+                    typeWork: data.toJSON().typeWork,
+                    yearRel: data.toJSON().yearRel,
+                    phone: dataUser.toJSON().phone,
+                    name: dataUser.toJSON().name,
+                    surname: dataUser.toJSON().surname,
+                    avatar: dataUser.toJSON().avatar,
+                    load: true
+                })
+            });
             
-            this.setState({
-                address: data.toJSON().address,
-                checked: data.toJSON().checked,
-                checkedZap: data.toJSON().checkedZap,
-                happened: data.toJSON().happened,
-                marka: data.toJSON().marka,
-                model: data.toJSON().model,
-                time: data.toJSON().time,
-                typeWork: data.toJSON().typeWork,
-                yearRel: data.toJSON().yearRel
-            })
         });
-        await firebase.auth().onAuthStateChanged(async (user) => {
-            if(user) {
-                firebase.database().ref("users").orderByChild("confEmail").equalTo(user.email).once("child_added", (snapshot) => {
-                    this.setState({ userKey: snapshot.key })
-                    firebase.database().ref("users/"+snapshot.key).on("value", (data) => {
-                        console.log('value', data.toJSON().name);
-                        this.setState({ 
-                            name: data.toJSON().name,
-                            surname: data.toJSON().surname,
-                            avatar: data.toJSON().avatar,
-                        });
-                        console.log('name', this.state.name);
-                        console.log('surname', this.state.surname);
-                        this.setState({load: true});
-                    })
-                });
-            }
-        });
+        // await firebase.auth().onAuthStateChanged(async (user) => {
+        //     if(user) {
+        //         firebase.database().ref("users").orderByChild("confEmail").equalTo(user.email).once("child_added", (snapshot) => {
+        //             this.setState({ userKey: snapshot.key })
+        //             firebase.database().ref("users/"+snapshot.key).on("value", (data) => {
+        //                 console.log('value', data.toJSON().name);
+        //                 this.setState({ 
+        //                     name: data.toJSON().name,
+        //                     surname: data.toJSON().surname,
+        //                     avatar: data.toJSON().avatar,
+        //                 });
+        //                 console.log('name', this.state.name);
+        //                 console.log('surname', this.state.surname);
+        //                 this.setState({load: true});
+        //             })
+        //         });
+        //     }
+        // });
 
         await Font.loadAsync({
             'TTCommons-DemiBold': require('../../../assets/fonts/TTCommons-DemiBold.ttf'),
@@ -130,6 +139,21 @@ export default class Detal extends Component {
                             value={this.state.address}
                             onChange={(text) => { 
                                 this.setState({ address: text.nativeEvent.text }) 
+                            }} />
+                    </View>
+                    <View style={[[styles.containerInput, {marginTop: 10}]]}>
+                        
+                        <Text style={[styles.label, {
+                            display: this.state.phone == '' ? 'none' : 'flex',
+                        }]}>
+                            Телефон
+                        </Text>
+                        <TextInput 
+                            style={styles.input} 
+                            placeholder="Телефон"
+                            value={this.state.phone}
+                            onChange={(text) => { 
+                                this.setState({ phone: text.nativeEvent.text }) 
                             }} />
                     </View>
                     <View style={[[styles.containerInput, {marginTop: 10}]]}>
