@@ -53,37 +53,41 @@ class HeroScreen extends Component {
         .catch((error) => this.setState({result: 'error: ' + error.message}));
     }
     render() {
-        if(this.state.load == true) {
+        console.log('dlg', this.state.load);
+        
+        if(this.state.load == true || this.state.load == undefined) {
             return <LoadIndicator />
-        }
-        return (
-            <ImageBackground source={fonHero} style={{width: '100%', height: '100%'}}>
-                <View style={styles.wrapperHero}>
-                    <Image source={HeroLogo} style={{ marginTop: (Dimensions.get('window').height * 20)/100 }} />
-                    <View style={styles.containerSign}>
-                        <Text style={{ color: '#fff', fontSize: 18, fontFamily: 'TTCommons-Thin' }} onPress={() => this.props.navigation.navigate('Login')}>Войти</Text>
-                        <View style={styles.registrationText}>
-                            <Text style={{ color: '#fff', fontSize: 18, fontFamily: 'TTCommons-Thin' }} onPress={() => this.props.navigation.navigate('Register')}>Регистрация</Text>
+        } else {
+            return (
+                <ImageBackground source={fonHero} style={{width: '100%', height: '100%'}}>
+                    <View style={styles.wrapperHero}>
+                        <Image source={HeroLogo} style={{ marginTop: (Dimensions.get('window').height * 20)/100 }} />
+                        <View style={styles.containerSign}>
+                            <Text style={{ color: '#fff', fontSize: 18, fontFamily: 'TTCommons-Thin' }} onPress={() => this.props.navigation.navigate('Login')}>Войти</Text>
+                            <View style={styles.registrationText}>
+                                <Text style={{ color: '#fff', fontSize: 18, fontFamily: 'TTCommons-Thin' }} onPress={() => this.props.navigation.navigate('Register')}>Регистрация</Text>
+                            </View>
+                            <View style={styles.socIcon}>
+                                <TouchableOpacity style={styles.wrapperIcon} onPress={() => this._shareFacebook() }>
+                                    <Image source={google} />
+                                </TouchableOpacity>
+                                <TouchableOpacity style={styles.wrapperIcon} onPress={() => this._shareFacebook() }>
+                                    <Image source={vk} />
+                                </TouchableOpacity>
+                                <TouchableOpacity style={styles.wrapperIcon} onPress={() => this._shareFacebook() }>
+                                    <Image source={facebook}  />
+                                </TouchableOpacity>
+                                
+                            </View>
                         </View>
-                        <View style={styles.socIcon}>
-                            <TouchableOpacity style={styles.wrapperIcon} onPress={() => this._shareFacebook() }>
-                                <Image source={google} />
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.wrapperIcon} onPress={() => this._shareFacebook() }>
-                                <Image source={vk} />
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.wrapperIcon} onPress={() => this._shareFacebook() }>
-                                <Image source={facebook}  />
-                            </TouchableOpacity>
-                            
-                        </View>
+                        
+    
                     </View>
                     
-
-                </View>
-                
-            </ImageBackground>
-        );
+                </ImageBackground>
+            );
+        }
+       
     }
   
 }

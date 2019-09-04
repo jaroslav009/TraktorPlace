@@ -67,14 +67,15 @@ class Account extends Component {
                 });
             }
         });
-        await Font.loadAsync({
-          'TTCommons-DemiBold': require('../../../assets/fonts/TTCommons-DemiBold.ttf'),
-          'TTCommons-Regular': require('../../../assets/fonts/TTCommons-Regular.ttf'),
-          'TTCommons-Bold': require('../../../assets/fonts/TTCommons-Bold.ttf'),
-        })
-        .then(() => {
-            this.setState({ loadFont: true });
-        });
+        // await Font.loadAsync({
+        //   'TTCommons-DemiBold': require('../../../assets/fonts/TTCommons-DemiBold.ttf'),
+        //   'TTCommons-Regular': require('../../../assets/fonts/TTCommons-Regular.ttf'),
+        //   'TTCommons-Bold': require('../../../assets/fonts/TTCommons-Bold.ttf'),
+        // })
+        // .then(() => {
+        //     this.setState({ loadFont: true });
+        // });
+        this.setState({ loadFont: true });
     }
 
     changePassword = () => {
@@ -205,7 +206,7 @@ class Account extends Component {
     }
 
     render() {
-        if(this.state.loadFont == true && this.state.load == true) {
+        if(this.state.load == true) {
             return (
                 <ScrollView style={{
                     paddingBottom: 20

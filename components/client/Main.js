@@ -79,6 +79,7 @@ class MainClient extends Component {
             acceptBtn: false,
             avatar: '',
             shift: new Animated.Value(0),
+            selectMechanic: new Animated.Value(0),
             popSuccess: false
         }
         this.streetSelect = this.streetSelect.bind(this);
@@ -485,6 +486,14 @@ class MainClient extends Component {
               useNativeDriver: true,
             }
           ).start();
+          Animated.timing(
+            this.state.selectMechanic,
+            {
+              toValue: gap,
+              duration: 500,
+              useNativeDriver: true,
+            }
+          ).start();
         });
     }
     
@@ -493,6 +502,14 @@ class MainClient extends Component {
         
       Animated.timing(
         this.state.shift,
+        {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }
+      ).start();
+      Animated.timing(
+        this.state.selectMechanic,
         {
           toValue: 0,
           duration: 200,
@@ -537,6 +554,7 @@ class MainClient extends Component {
 
     render() {
         const { shift } = this.state;
+        const { selectMechanic } = this.state;
         const { navigation } = this.props;
 
         let count = 0;
@@ -900,220 +918,226 @@ class MainClient extends Component {
                     zIndex: 1000000,
                     width: Dimensions.get('window').width,
                 }]}>
-                    <ScrollView>
-                        <View style={{
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        height: '100%',
-                        width: Dimensions.get('window').width,
-                    }}>
-                        <Text style={{
-                                fontSize: 20,
-                                textAlign: 'center'
-                            }}>{this.state.address}</Text>
-                        <View style={[styles.containerInput, {
-                          marginTop: 20
-                        }]}>
-
-                            <Text style={[styles.label, {
-                                display: this.state.marka == '' ? 'none' : 'flex',
-                            }]}>
-                                Марка
-                            </Text>
-                            <Text style={[styles.errText, { display: this.state.errMarka }]}>Марка</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Марка"
-                                onChange={(text) => {
-                                    if(text == '') {
-                                        this.setState({ errMarka: 'flex' });
-                                    } else {
-                                        this.setState({ errMarka: 'none' });
-                                    }
-                                    this.setState({ marka: text.nativeEvent.text })
-                                }} />
-                        </View>
-                        <View style={styles.containerInput}>
-                            <Text style={[styles.label, {
-                                display: this.state.model == '' ? 'none' : 'flex',
-
-                            }]}>
-                                Модель
-                            </Text>
-                            <Text style={[styles.errText, { display: this.state.errModel }]}>Модель</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Модель"
-                                onChange={(text) => {
-                                    if(text == '') {
-                                        this.setState({ errModel: 'flex' });
-                                    } else {
-                                        this.setState({ errModel: 'none' });
-                                    }
-                                    this.setState({ model: text.nativeEvent.text })
-                                }} />
-                        </View>
-                        <View style={styles.containerInput}>
-                            <Text style={[styles.label, {
-                                display: this.state.yearRel == '' ? 'none' : 'flex',
-
-                            }]}>
-                                Год выпуска
-                            </Text>
-                            <Text style={[styles.errText, { display: this.state.errYearRel }]}>Год выпуска</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Год выпуска"
-                                onChange={(text) => {
-                                    if(text == '') {
-                                        this.setState({ errYearRel: 'flex' });
-                                    } else {
-                                        this.setState({ errYearRel: 'none' });
-                                    }
-                                    this.setState({ yearRel: text.nativeEvent.text })
-                                }} />
-                        </View>
-                        <View style={styles.containerInput}>
-                            <Text style={[styles.label, {
-                                display: this.state.typeWork == '' ? 'none' : 'flex',
-
-                            }]}>
-                                Тип работ
-                            </Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Тип работ"
-                                onChange={(text) => {
-                                    this.setState({ typeWork: text.nativeEvent.text })
-                                }} />
-                        </View>
-                        <View style={[styles.containerInput, {
-                            flexDirection: 'row',
+                    <Animated.View style={[styles.container, { transform: [{translateY: selectMechanic}], backgroundColor: '#fff' }]}>
+                        <ScrollView>
+                            <View style={{
+                            justifyContent: 'center',
                             alignItems: 'center',
-                            justifyContent: 'center'
-                        }]}>
-                            <Text style={{
-                                marginRight: 20,
-                                width: '50%'
-                            }}>Свои запчасти</Text>
-                            <CheckBox
-                                    center
-                                    checked={this.state.checkedZap}
-                                    checkedColor='#3BD88D'
-                                    uncheckedColor='#3BD88D'
-                                    onPress={() => {
-                                        this.setState({ checkedZap: !this.state.checkedZap });
-                                    }}
-                                    />
-                        </View>
-                        <View style={[styles.containerInput, {
-                            flexDirection: 'row',
-                            zIndex: 1000000,
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }]}>
-                            <Text style={{
-                                marginRight: 20,
-                                width: '50%' }}>Во сколько приехать механику</Text>
-                                {/* Select */}
-                                <TouchableOpacity style={styles.containerSelect} onPress={() => {
-                                    this.setState({ openSelect: !this.state.openSelect })
-                                }}>
-                                    <Text style={{
-                                        color: '#fff',
-                                        marginRight: 5
-                                    }}>
-                                        БВ
-                                    </Text>
-                                    <Image source={downArrow} />
-                                </TouchableOpacity>
-
-
-                                {/* Select */}
-                        </View>
-                        {/* Select */}
-                        <View style={{
-                            position: this.state.openSelect == true ? 'absolute' : 'relative',
-                            display: this.state.openSelect == true ? 'flex' : 'none',
-                            bottom: Dimensions.get('window').height < 600 ? Dimensions.get('window').height*0.30 : Dimensions.get('window').height*0.20,
-                            right: Dimensions.get('window').width<350 ? Dimensions.get('window').width*0.09 : Dimensions.get('window').width*0.2,
-
+                            height: '100%',
+                            width: Dimensions.get('window').width,
                         }}>
-                            <View style={styles.triangle}></View>
-                            <View style={styles.contentSelect}>
+                            <Text style={{
+                                    fontSize: 20,
+                                    textAlign: 'center'
+                                }}>{this.state.address}</Text>
+                            <View style={[styles.containerInput, {
+                                marginTop: 20
+                            }]}>
 
-                                <View style={{
-                                    flexDirection: 'row',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    zIndex: 100000000
-                                }}
-                                >
-                                    <View>
-                                        <Text>
-                                            Ближайшое время
-                                        </Text>
-                                    </View>
-                                    <CheckBox
-                                    center
-                                    checkedIcon='dot-circle-o'
-                                    uncheckedIcon='circle-o'
-                                    checked={this.state.checked}
-                                    checkedColor='#3BD88D'
-                                    uncheckedColor='#3BD88D'
-                                    onPress={() => {
-                                        this.setState({ checked: !this.state.checked });
-                                    }}
-                                    />
-                                </View>
-                                <View style={{
-                                    flexDirection: 'row',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    zIndex: 1000,
-                                    height: 50
-                                }}
-                                >
-                                    <View>
-                                        <Text>
-                                            Определенное время
-                                        </Text>
-                                    </View>
-                                    <TextInput style={{
-                                        width: 46,
-                                        borderColor: '#3BD88D',
-                                        borderWidth: 1
-                                    }}
+                                <Text style={[styles.label, {
+                                    display: this.state.marka == '' ? 'none' : 'flex',
+                                }]}>
+                                    Марка
+                                </Text>
+                                <Text style={[styles.errText, { display: this.state.errMarka }]}>Марка</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Марка"
                                     onChange={(text) => {
-                                        if(text != '') {
-                                            this.setState({ checked: false });
+                                        if(text == '') {
+                                            this.setState({ errMarka: 'flex' });
+                                        } else {
+                                            this.setState({ errMarka: 'none' });
                                         }
-                                        this.setState({ time: text.nativeEvent.text });
+                                        this.setState({ marka: text.nativeEvent.text })
+                                    }} />
+                            </View>
+                            <View style={styles.containerInput}>
+                                <Text style={[styles.label, {
+                                    display: this.state.model == '' ? 'none' : 'flex',
+
+                                }]}>
+                                    Модель
+                                </Text>
+                                <Text style={[styles.errText, { display: this.state.errModel }]}>Модель</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Модель"
+                                    onChange={(text) => {
+                                        if(text == '') {
+                                            this.setState({ errModel: 'flex' });
+                                        } else {
+                                            this.setState({ errModel: 'none' });
+                                        }
+                                        this.setState({ model: text.nativeEvent.text })
+                                    }} />
+                            </View>
+                            <View style={styles.containerInput}>
+                                <Text style={[styles.label, {
+                                    display: this.state.yearRel == '' ? 'none' : 'flex',
+
+                                }]}>
+                                    Год выпуска
+                                </Text>
+                                <Text style={[styles.errText, { display: this.state.errYearRel }]}>Год выпуска</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    keyboardType="numeric"
+                                    placeholder="Год выпуска"
+                                    onChange={(text) => {
+                                        if(text == '') {
+                                            this.setState({ errYearRel: 'flex' });
+                                        } else {
+                                            this.setState({ errYearRel: 'none' });
+                                        }
+                                        this.setState({ yearRel: text.nativeEvent.text })
+                                    }} />
+                            </View>
+                            <View style={styles.containerInput}>
+                                <Text style={[styles.label, {
+                                    display: this.state.typeWork == '' ? 'none' : 'flex',
+
+                                }]}>
+                                    Тип работ
+                                </Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Тип работ"
+                                    onChange={(text) => {
+                                        this.setState({ typeWork: text.nativeEvent.text })
+                                    }} />
+                            </View>
+                            <View style={[styles.containerInput, {
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }]}>
+                                <Text style={{
+                                    marginRight: 20,
+                                    width: '50%'
+                                }}>Свои запчасти</Text>
+                                <CheckBox
+                                        centers
+                                        checked={this.state.checkedZap}
+                                        checkedColor='#3BD88D'
+                                        uncheckedColor='#3BD88D'
+                                        onPress={() => {
+                                            this.setState({ checkedZap: !this.state.checkedZap });
+                                        }}
+                                        />
+                            </View>
+                            <View style={[styles.containerInput, {
+                                flexDirection: 'row',
+                                zIndex: 1000000,
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }]}>
+                                <Text style={{
+                                    marginRight: 20,
+                                    width: '50%' }}>Во сколько приехать механику</Text>
+                                    {/* Select */}
+                                    <TouchableOpacity style={styles.containerSelect} onPress={() => {
+                                        this.setState({ openSelect: !this.state.openSelect })
+                                    }}>
+                                        <Text style={{
+                                            color: '#fff',
+                                            marginRight: 5
+                                        }}>
+                                            БВ
+                                        </Text>
+                                        <Image source={downArrow} />
+                                    </TouchableOpacity>
+
+
+                                    {/* Select */}
+                            </View>
+                            {/* Select */}
+                            <View style={{
+                                position: this.state.openSelect == true ? 'absolute' : 'relative',
+                                display: this.state.openSelect == true ? 'flex' : 'none',
+                                bottom: Dimensions.get('window').height < 600 ? Dimensions.get('window').height*0.30 : Dimensions.get('window').height*0.20,
+                                right: Dimensions.get('window').width<350 ? Dimensions.get('window').width*0.09 : Dimensions.get('window').width*0.2,
+
+                            }}>
+                                <View style={styles.triangle}></View>
+                                <View style={styles.contentSelect}>
+
+                                    <View style={{
+                                        flexDirection: 'row',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        zIndex: 100000000
                                     }}
-                                    />
+                                    >
+                                        <View>
+                                            <Text>
+                                                Ближайшое время
+                                            </Text>
+                                        </View>
+                                        <CheckBox
+                                        center
+                                        checkedIcon='dot-circle-o'
+                                        uncheckedIcon='circle-o'
+                                        checked={this.state.checked}
+                                        checkedColor='#3BD88D'
+                                        uncheckedColor='#3BD88D'
+                                        onPress={() => {
+                                            this.setState({ checked: !this.state.checked });
+                                        }}
+                                        />
+                                    </View>
+                                    <View style={{
+                                        flexDirection: 'row',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        zIndex: 1000,
+                                        height: 50
+                                    }}
+                                    >
+                                        <View>
+                                            <Text>
+                                                Определенное время
+                                            </Text>
+                                        </View>
+                                        <TextInput style={{
+                                            width: 46,
+                                            borderColor: '#3BD88D',
+                                            borderWidth: 1,
+                                            fontSize: 9,
+                                        }}
+                                        keyboardType="phone-pad"
+                                        placeholder="Дата Время"
+                                        onChange={(text) => {
+                                            if(text != '') {
+                                                this.setState({ checked: false });
+                                            }
+                                            this.setState({ time: text.nativeEvent.text });
+                                        }}
+                                        />
+                                    </View>
                                 </View>
                             </View>
-                        </View>
-                         {/* Select */}
-                        <View style={[styles.containerInput]}>
-                            <Text style={[styles.label, {
-                                display: this.state.happened == '' ? 'none' : 'flex',
+                                {/* Select */}
+                            <View style={[styles.containerInput]}>
+                                <Text style={[styles.label, {
+                                    display: this.state.happened == '' ? 'none' : 'flex',
 
-                            }]}>
-                                Что случилось?
-                            </Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Что случилось?"
-                                onChange={(text) => {
-                                    this.setState({ happened: text.nativeEvent.text })
-                                }} />
-                        </View>
-                        <TouchableOpacity style={styles.btn} onPress={this.dataBtn}>
-                            <Text style={{color: '#fff'}}>Подтвердить</Text>
-                        </TouchableOpacity>
-                        </View>
-                    </ScrollView>
+                                }]}>
+                                    Что случилось?
+                                </Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Что случилось?"
+                                    onChange={(text) => {
+                                        this.setState({ happened: text.nativeEvent.text })
+                                    }} />
+                            </View>
+                            <TouchableOpacity style={styles.btn} onPress={this.dataBtn}>
+                                <Text style={{color: '#fff'}}>Подтвердить</Text>
+                            </TouchableOpacity>
+                            </View>
+                        </ScrollView>
+                    </Animated.View>
                 </Animated.View>
                 {/* Data */}
             </View>

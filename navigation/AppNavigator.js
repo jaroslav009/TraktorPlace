@@ -32,7 +32,9 @@ import MyZakaz from '../components/client/MyZakaz/MyZakaz';
 	// Card
 	import PaymentMethod from '../components/client/PaymentMethod/PaymentMethod';
 	import AddCard from '../components/client/PaymentMethod/AddCard';
+	
 	// Card
+	import LoadStart from '../components/LoadStart';
 
 // Client
 
@@ -52,6 +54,7 @@ import finished from '../components/client/MyJobs/finished';
 
 export default createAppContainer(
 	createStackNavigator({
+		LoadStart: LoadStart,
 		HeroScreen: HeroScreen,
 		Register: Register,
 		MainClient: MainClient,

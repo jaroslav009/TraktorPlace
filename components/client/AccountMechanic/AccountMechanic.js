@@ -53,17 +53,8 @@ class AccountMechanic extends PureComponent {
                 });
             }
         });
-        await Font.loadAsync({
-            'TTCommons-Bold': require('../../../assets/fonts/TTCommons-Bold.ttf'),
-            'TTCommons-Regular': require('../../../assets/fonts/TTCommons-Regular.ttf'),
-            'TTCommons-Medium': require('../../../assets/fonts/TTCommons-Medium.ttf'),
-            'TTCommons-DemiBold': require('../../../assets/fonts/TTCommons-DemiBold.ttf'),
-            'TTCommons-Bold': require('../../../assets/fonts/TTCommons-Bold.ttf'),
-        })
-        .then(() => {
-            this.setState({ loadFont: true });
-        })
-        this.props.fontLoader();
+
+        this.setState({ loadFont: true });
     }
 
     async changeAvatar() {
@@ -128,7 +119,7 @@ class AccountMechanic extends PureComponent {
     }
 
     render() {
-        if(this.state.loadFont == true && this.state.load == true) {
+        if(this.state.load == true) {
 
             return (
                 <ScrollView>
