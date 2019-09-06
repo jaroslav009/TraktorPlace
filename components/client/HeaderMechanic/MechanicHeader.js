@@ -176,7 +176,11 @@ export default class MechanicHeader extends Component {
                             
                     </Animated.View>
                     <View style={styles.header}>
-                        <TouchableHighlight style={{ alignSelf: 'center', padding: 15, zIndex: 100000 }} onPress={() => this._openMenu() }>
+                        <TouchableHighlight style={{ 
+                            alignSelf: 'center',
+                            position: 'absolute', 
+                            padding: 15,
+                            zIndex: 100000 }} onPress={() => this._openMenu() }>
                             <Image source={burger} style={styles.burger} />
                         </TouchableHighlight>                        
                     </View>
@@ -188,8 +192,8 @@ export default class MechanicHeader extends Component {
 
 const styles = StyleSheet.create({
     header: {
-        paddingTop: 20,
-        paddingBottom: 20,
+        // paddingTop: 20,
+        // paddingBottom: 20,
         display: 'flex',
         flexDirection: 'row',
         justifyContent: 'space-around',
@@ -197,7 +201,10 @@ const styles = StyleSheet.create({
         elevation: 5,
         backgroundColor: 'transparent',
         position: 'absolute',
-        zIndex: 1000000
+        zIndex: 1000000,
+        left: 200,
+        top: 100,
+        backgroundColor: '#333'
     },
     burger: {
         width: 19.24,

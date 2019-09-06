@@ -575,17 +575,24 @@ class MainClient extends Component {
                     <SuccessPopUp text="Информация о заявке находится в Мои заказы" color="#EBEBEB" />
                 </View>
                 {/* Success */}
-                <View>
-                    {
+                <View style={{
+                    position: 'absolute',
+                    // top: 50,
+                    // left: 50,
+                    zIndex: 100000,
+                    elevation: 1000
+                }}>
+                    <HeaderClient navigation={this.props.navigation} page="Dashboard"
+                        click={this.handleClickHeader}
+                        style={{ width: '100%', height: this.state.clickHeader == false ? 50 : '100%', position: 'absolute' }} />
+                    {/* {
                         this.state.role == 'mechanic' ?
                         <MechanicHeader navigation={this.props.navigation} page="Dashboard"
                         click={this.handleClickHeader}
                         style={{ width: '100%', height: this.state.clickHeader == false ? 50 : '100%', position: 'absolute' }} />
                         :
-                        <HeaderClient navigation={this.props.navigation} page="Dashboard"
-                        click={this.handleClickHeader}
-                        style={{ width: '100%', height: this.state.clickHeader == false ? 50 : '100%', position: 'absolute' }} />
-                    }
+                        
+                    } */}
 
                 </View>
                 
@@ -649,38 +656,38 @@ class MainClient extends Component {
                             count++;
 
                             return <TouchableOpacity style={{
-                                width: Dimensions.get('window').width,
-                                height: Dimensions.get('window').height,
+                                width: 100,
+                                height: 50,
                                 position: 'absolute' }}
                                 key={key} >
-                            <MapView.Marker.Animated
-                                coordinate={
-                                    new MapView.AnimatedRegion({
-                                        latitude: value.latitude,
-                                        longitude: value.longitude,
-                                        latitudeDelta: 0.045,
-                                        longitudeDelta: 0.045
-                                    })
-                                }
-                                anchor={{ x: 0.35, y: 0.32 }}
-                                ref={marker => { this.marker = marker }}
-                                styles={{
-                                    width: 600,
-                                    height: 600,
-                                    position: 'absolute' }}
-                                onPress={() => {
-                                    this.setState({ [name]: !this.state[name], keyDriver: key });
-                                    console.log(this.state[name]);
-                                    this.pressDriver(key)
-                                }}
-                            >
-                                <Image source={car} style={{
-                                    width: 20,
-                                    height: 20
-                                }} />
+                                    <MapView.Marker.Animated
+                                        coordinate={
+                                            new MapView.AnimatedRegion({
+                                                latitude: value.latitude,
+                                                longitude: value.longitude,
+                                                latitudeDelta: 0.045,
+                                                longitudeDelta: 0.045
+                                            })
+                                        }
+                                        anchor={{ x: 0.35, y: 0.32 }}
+                                        ref={marker => { this.marker = marker }}
+                                        styles={{
+                                            width: 50,
+                                            height: 50,
+                                            position: 'absolute' }}
+                                        onPress={() => {
+                                            this.setState({ [name]: !this.state[name], keyDriver: key });
+                                            console.log(this.state[name]);
+                                            this.pressDriver(key)
+                                        }}
+                                    >
+                                        <Image source={car} style={{
+                                            width: 20,
+                                            height: 20
+                                        }} />
 
 
-                            </MapView.Marker.Animated>
+                                    </MapView.Marker.Animated>
 
                             </TouchableOpacity>
                         })
@@ -714,8 +721,9 @@ class MainClient extends Component {
                                 alignItems: 'center'
                             }}>
                                 <View>
-                                  {
-                                      this.state.drivers[this.state.keyDriver] == '' ? <Avatar rounded title="TP" size="medium" /> : <Avatar
+                                  { 
+                                    this.state.drivers[this.state.keyDriver] == undefined ? <Avatar rounded title="TP" size="medium" /> :
+                                      this.state.drivers[this.state.keyDriver].avatar == '' ? <Avatar rounded title="TP" size="medium" /> : <Avatar
                                           rounded
                                           size="medium"
                                           source={{
@@ -847,6 +855,21 @@ class MainClient extends Component {
                                 </View>
                             </View>
                         </View>
+                        <TouchableOpacity 
+                        onPress={() => {
+                            this.setState({
+                                dataDriver: false,
+                            })
+                        }}
+                        style={{
+                            width: Dimensions.get('window').width,
+                            height: Dimensions.get('window').height,
+                            zIndex: 100,
+                            position: 'absolute'
+                            // backgroundColor: '#333'
+                        }}>
+
+                        </TouchableOpacity>
                     </View>
                 }
                 

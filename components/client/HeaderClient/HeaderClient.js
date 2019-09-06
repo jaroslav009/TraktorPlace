@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {StyleSheet, Text, View, Image, TouchableHighlight, Dimensions, Animated } from 'react-native';
+import {StyleSheet, Text, View, Image, TouchableHighlight, Dimensions, Animated, TouchableOpacity } from 'react-native';
 import * as firebase from 'firebase';
 
 import burger from '../../../assets/images/burger.png'
@@ -95,17 +95,22 @@ export default class HeaderClient extends Component {
                           height: Dimensions.get('window').height
                       }]}>
 
-                          <View style={{
+                          <TouchableOpacity style={{
                               backgroundColor: '#3BD88D',
-                              padding: 15,
+                              padding: 30,
                               paddingTop: 30,
-                              height: 250
-                          }}>
+                              height: 250,
+                              zIndex: 1000000000
+                          }}
+                          onPress={() => {
+                              this._closeMenu();
+                          }}
+                          >
                               <Image source={burger} />
-                          </View>
+                          </TouchableOpacity>
 
                           <View style={{
-                              width: '60%',
+                              width: Dimensions.get('window').width*0.6,
                               backgroundColor: '#fff',
                               zIndex: 100000,
                               // paddingLeft: 40,
@@ -173,7 +178,7 @@ export default class HeaderClient extends Component {
                               </View>
                           </View>
                           <TouchableHighlight onPress={() => this._closeMenu()} style={{
-                                  width: '600%',
+                                  width: 500,
                                   height: Dimensions.get('window').height,
                                   opacity: 0,
                                   position: 'absolute',
@@ -184,12 +189,15 @@ export default class HeaderClient extends Component {
                           </TouchableHighlight>
 
                   </Animated.View>
-                  <View style={styles.header}>
+                  <View style={[styles.header, {
+                      position: this.state.open == false ? 'absolute' : 'relative',
+                      display: this.state.open == false ? 'flex' : 'none'
+                  }]}>
                       <TouchableHighlight style={{ alignSelf: 'center', padding: 15, zIndex: 100000 }} onPress={() => this._openMenu() }>
                           <Image source={burger} style={styles.burger} />
                       </TouchableHighlight>
                   </View>
-
+            
               </View>
             );
     }
@@ -199,13 +207,12 @@ const styles = StyleSheet.create({
     header: {
         paddingTop: 20,
         paddingBottom: 20,
-        display: 'flex',
         flexDirection: 'row',
         justifyContent: 'space-around',
         alignItems: 'center',
         elevation: 5,
         backgroundColor: 'transparent',
-        position: 'absolute',
+        
         zIndex: 1000000
     },
     burger: {

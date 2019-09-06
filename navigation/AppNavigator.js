@@ -55,14 +55,13 @@ import finished from '../components/client/MyJobs/finished';
 export default createAppContainer(
 	createStackNavigator({
 		LoadStart: LoadStart,
+		MyJobs: MyJobs,
+		
 		HeroScreen: HeroScreen,
 		Register: Register,
 		MainClient: MainClient,
 		MyZakaz: MyZakaz,
 		Login: Login,
-		
-		
-		MyJobs: MyJobs,
 		
 		Account: Account,
 		PaymentMethod: PaymentMethod,
