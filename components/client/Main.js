@@ -582,39 +582,45 @@ class MainClient extends Component {
                     zIndex: 100000,
                     elevation: 1000
                 }}>
-                    <HeaderClient navigation={this.props.navigation} page="Dashboard"
+                    
+                    {
+                        this.state.role == 'mechanic' ? <MechanicHeader 
+                        navigation={this.props.navigation} page="Dashboard"
                         click={this.handleClickHeader}
                         style={{ width: '100%', height: this.state.clickHeader == false ? 50 : '100%', position: 'absolute' }} />
-                    {/* {
-                        this.state.role == 'mechanic' ?
-                        <MechanicHeader navigation={this.props.navigation} page="Dashboard"
+                        : <HeaderClient navigation={this.props.navigation} page="Dashboard"
                         click={this.handleClickHeader}
                         style={{ width: '100%', height: this.state.clickHeader == false ? 50 : '100%', position: 'absolute' }} />
-                        :
-                        
-                    } */}
+                    }
 
                 </View>
                 
                 
 
                 <View style={{
-                  justifyContent: 'center',
-                  alignItems: 'center'
+                    position: 'absolute',
+                    top: 50,
+                    
+                    zIndex: 1000,
                 }}>
-                  <Text style={{
-                      position: 'absolute',
-                      top: 50,
-                      // left:'40%',
-                      zIndex: 1000,
-                      fontSize: 20,
-
-                  }}>
                     {
-                      this.state.acceptBtn == true ? 'Выберите механика'
-                      : this.state.confirmAddress
+                        this.state.acceptBtn == true ? <Text style={{
+                            alignItems: 'center',
+                            fontSize: 20,
+                            justifyContent: 'center',
+                            left: '40%',
+                        }}>
+                            Выберите механика
+                        </Text>
+                        :
+                        <Text style={{
+                            fontSize: 20,
+                            left: '160%',
+                        }}>
+                            {this.state.confirmAddress}
+                        </Text>
                     }
-                  </Text>
+                  
                 </View>
                 <MapView
                     initialRegion={this.state.mapRegion}
@@ -891,7 +897,7 @@ class MainClient extends Component {
                         display: this.state.addressForm == true ? 'none' : 'flex',
                         position: this.state.addressForm == true ? 'relative' : 'absolute'
                     }]} onPress={this.streetSelect}>
-                        <Text style={{ color: '#737373', textAlign: 'center' }}>Куда?</Text>
+                        <Text style={{ color: '#737373', textAlign: 'center' }}>Заказать механика</Text>
                     </TouchableOpacity>
                 }
                 
@@ -915,7 +921,6 @@ class MainClient extends Component {
                                 }
                                 text2 = text.nativeEvent.text;
                                 this.setState({ address: text.nativeEvent.text })
-                                console.log('text2', text.nativeEvent.text);
 
                             }}
                             value={this.state.address} />
@@ -1080,7 +1085,7 @@ class MainClient extends Component {
                                 display: this.state.openSelect == true ? 'flex' : 'none',
                                 bottom: Dimensions.get('window').height < 600 ? Dimensions.get('window').height*0.30 : Dimensions.get('window').height*0.20,
                                 right: Dimensions.get('window').width<350 ? Dimensions.get('window').width*0.09 : Dimensions.get('window').width*0.2,
-
+                                zIndex: 100000000000000
                             }}>
                                 <View style={styles.triangle}></View>
                                 <View style={styles.contentSelect}>
@@ -1089,7 +1094,7 @@ class MainClient extends Component {
                                         flexDirection: 'row',
                                         justifyContent: 'space-between',
                                         alignItems: 'center',
-                                        zIndex: 100000000
+                                        zIndex: 100000000,
                                     }}
                                     >
                                         <View>
@@ -1113,8 +1118,8 @@ class MainClient extends Component {
                                         flexDirection: 'row',
                                         justifyContent: 'space-between',
                                         alignItems: 'center',
-                                        zIndex: 1000,
-                                        height: 50
+                                        zIndex: 1000000000,
+                                        height: 50,
                                     }}
                                     >
                                         <View>
@@ -1127,6 +1132,8 @@ class MainClient extends Component {
                                             borderColor: '#3BD88D',
                                             borderWidth: 1,
                                             fontSize: 9,
+                                            paddingTop: 5,
+                                            paddingBottom: 5
                                         }}
                                         keyboardType="phone-pad"
                                         placeholder="Дата Время"
@@ -1271,12 +1278,12 @@ const styles = {
     },
     contentSelect: {
         width: Dimensions.get('window').width*70/100,
+        height: 100,
         backgroundColor: '#fff',
         position: 'absolute',
         right: 0,
-
-        zIndex: 10000000,
-        elevation: 2,
+        zIndex: 10000000000000,
+        elevation: 1000000,
         paddingLeft: 8,
         paddingRight: 8,
         borderRadius: 10
