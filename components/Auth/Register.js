@@ -1,5 +1,7 @@
 import React, {Component} from 'react';
-import { Text, View, Image, ImageBackground, StyleSheet, Dimensions, TouchableOpacity, TextInput, ScrollView } from 'react-native';
+import { Text, View, Image, Keyboard, StyleSheet, Dimensions, TouchableOpacity, TextInput, ScrollView, Alert, Animated, UIManager  } from 'react-native';
+import * as firebase from 'firebase';
+import * as Font from 'expo-font';
 
 import Back from '../Back';
 
@@ -10,13 +12,11 @@ import Fonts from '../../constants/Fonts';
 // Image
 import logoReg from '../../assets/images/logoReg.png';
 import Arrow from '../../assets/images/left-arrow.png';
-
 // Image
 
-function validateEmail(email) {
-    var pattern  = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-    return pattern .test(email);
-}
+import makeid from '../../functions/makeId';
+import validateEmail from '../../functions/validateEmail';
+const { State: TextInputState } = TextInput;
 
 class Register extends Component {
     constructor(props) {
@@ -30,9 +30,32 @@ class Register extends Component {
             errEmail: false,
             password: '',
             errPass: false,
+            fontLoaded: false,
+            phone: '',
+            errUser: false,
+            phoneKeyBoard: false,
+            shift: new Animated.Value(0),
         }
         this.signUp = this.signUp.bind(this);
         this._back = this._back.bind(this);
+    }
+
+    async componentDidMount() {
+        await Font.loadAsync({
+            'TTCommons-Regular': require('../../assets/fonts/TTCommons-Regular.ttf'),
+            'TTCommons-Thin': require('../../assets/fonts/TTCommons-Thin.ttf'),
+        })
+        .then(() => {
+            console.log('font loadede');
+            
+            this.setState({ fontLoaded: true });
+        });
+        
+        await firebase.auth().onAuthStateChanged((user) => {
+            console.log('user', user);
+        });
+        
+        
     }
 
     signUp() {
@@ -58,12 +81,50 @@ class Register extends Component {
         } else {
             this.setState({ errPass: false });
         }
-        this.props.navigation.navigate('ConfirmPhone', {
-            name: this.state.name,
-            surname: this.state.surname,
-            email: this.state.email,
-            password: this.state.password
-        })
+        firebase
+            .auth()
+            .createUserWithEmailAndPassword(this.state.email, this.state.password)
+            .then(async () => {
+                await firebase.auth().onAuthStateChanged(function(user) {                        
+                    user.sendEmailVerification(); 
+                });
+                
+                await firebase.database().ref('users/' + makeid(10)).set({
+                    name: this.state.name,
+                    surname: this.state.surname,
+                    email: this.state.email,
+                    phone: this.state.phone,
+                    role: 'user',
+                    confEmail: this.state.email,
+                    avatar: '',
+                }, function(error) {
+                    if (error) {
+                        console.log('err', error);
+                    } else {
+                        console.log('Saved data user');
+                    }
+                })
+                Alert.alert(
+                    '',
+                    'Подтвердите почту',
+                    [
+                      {text: 'OK', onPress: () => console.log('OK Pressed')},
+                    ],
+                    {cancelable: false},
+                );
+                this.props.navigation.navigate('Login');
+            })
+            .catch(err => {
+                console.log('err', err);
+                this.setState({ errUser: true });
+            })
+        
+        // this.props.navigation.navigate('ConfirmPhone', {
+        //     name: this.state.name,
+        //     surname: this.state.surname,
+        //     email: this.state.email,
+        //     password: this.state.password
+        // })
     }
 
 
@@ -71,9 +132,58 @@ class Register extends Component {
         this.props.navigation.goBack()
     }
 
+    componentWillMount() {
+        this.keyboardDidShowSub = Keyboard.addListener('keyboardDidShow', this.handleKeyboardDidShow);
+        this.keyboardDidHideSub = Keyboard.addListener('keyboardDidHide', this.handleKeyboardDidHide);
+      }
+    
+      componentWillUnmount() {
+        this.keyboardDidShowSub.remove();
+        this.keyboardDidHideSub.remove();
+      }
+
+      handleKeyboardDidShow = (event) => {
+          console.log('didShow');
+          
+        const { height: windowHeight } = Dimensions.get('window');
+        const keyboardHeight = event.endCoordinates.height;
+        const currentlyFocusedField = TextInputState.currentlyFocusedField();
+        UIManager.measure(currentlyFocusedField, (originX, originY, width, height, pageX, pageY) => {
+          const fieldHeight = height;
+          const fieldTop = pageY;
+          const gap = (windowHeight - keyboardHeight) - (fieldTop + fieldHeight);
+          if (gap >= 0) {
+            return;
+          }
+          Animated.timing(
+            this.state.shift,
+            {
+              toValue: gap,
+              duration: 1000,
+              useNativeDriver: true,
+            }
+          ).start();
+        });
+      }
+    
+      handleKeyboardDidHide = () => {
+          console.log('hidden key');
+          
+        Animated.timing(
+          this.state.shift,
+          {
+            toValue: 0,
+            duration: 1000,
+            useNativeDriver: true,
+          }
+        ).start();
+      }
+
     render() {
+        const { shift } = this.state;
+
         return (
-            <ScrollView>
+            <ScrollView style={{ height: Dimensions.get('window').height }}>
                 <Back nav={this.props.navigation} />
                 <View style={{
                     minHeight: Dimensions.get('window').height*90/100,
@@ -87,7 +197,11 @@ class Register extends Component {
                     }}>
                         <Image source={logoReg} style={{ width: 238, height: 54 }} />
                     </View>
+                    <Animated.View style={[styles.container, { transform: [{translateY: shift}] }]}>
                     <View style={styles.containerForm}>
+                        <View>
+                            <Text style={[styles.errText, {opacity: this.state.errUser == true ? 1 : 0}]}>Этот пользователь уже существует</Text>
+                        </View>
                         <View style={{ marginTop: 30 }}> 
                             <Text style={[styles.errText, {opacity: this.state.errName == true ? 1 : 0}]}>Введите имя</Text>
                             <Text style={[
@@ -98,9 +212,8 @@ class Register extends Component {
                             </Text>
                             <TextInput 
                                 placeholder="Имя" 
-                                style={styles.itemForm} value={this.state.name} 
+                                style={[styles.itemForm]} value={this.state.name} 
                                 onChange={(text) => { 
-                                    console.log('text', text.nativeEvent.text)
                                     let e = false;
                                     if(text.nativeEvent.text == '') e = true
                                     this.setState({ name: text.nativeEvent.text, errName: e });
@@ -115,33 +228,31 @@ class Register extends Component {
                             ]}>
                                 Фамилия
                             </Text>
-                            <TextInput placeholder="Фамилия" style={styles.itemForm} 
+                            <TextInput placeholder="Фамилия" style={[styles.itemForm]} 
                             onChange={(text) => { 
-                                console.log('text', text.nativeEvent.text)
                                 let e = false;
                                 if(text.nativeEvent.text == '') e = true
                                 this.setState({ surname: text.nativeEvent.text, errSurname: e });
                             }} />
                         </View>
                         <View style={{ marginTop: 10 }}> 
-                            <Text style={[styles.errText, {opacity: this.state.errEmail == true ? 1 : 0}]}>Введите ваш емеил</Text>
+                            <Text style={[styles.errText, {opacity: this.state.errEmail == true ? 1 : 0}]}>Введите ваш почта</Text>
                             <Text style={[
                                 styles.label,
                                 {
                                     opacity: this.state.email == '' ? 0 : 1
                                 }
                             ]}>
-                                Емеил
+                                Почта
                             </Text>
-                            <TextInput placeholder="Почта" style={styles.itemForm} 
+                            <TextInput placeholder="Почта" style={[styles.itemForm]} 
                             onChange={(text) => { 
-                                console.log('text', text.nativeEvent.text)
                                 this.setState({ email: text.nativeEvent.text });
                             }}
                             />
                         </View>
                         <View style={{ marginTop: 10 }}> 
-                            <Text style={[styles.errText, {opacity: this.state.errPass == true ? 1 : 0}]}>Пароль должен быть не менее 6 символов</Text>
+                            <Text style={[styles.errText, {opacity: this.state.errPass == true ? 1 : 0, width: 238}]}>Пароль должен быть не менее 6 символов</Text>
                             <Text style={[
                                 styles.label,
                                 {
@@ -150,26 +261,44 @@ class Register extends Component {
                             ]}>
                                 Пароль
                             </Text>
-                            <TextInput secureTextEntry={true} placeholder="Пароль" style={styles.itemForm} 
+                            <TextInput secureTextEntry={true} placeholder="Пароль" style={[styles.itemForm]} 
                             onChange={(text) => { 
-                                console.log('text', text.nativeEvent.text)
-                                console.log('length', text.nativeEvent.text.length)
                                 let e = false;
                                 if(text.nativeEvent.text.length < 6) e = true
                                 this.setState({ password: text.nativeEvent.text, errPass: e });
                             }}
                             />
                         </View>
+                        <View style={{ marginTop: 10 }} keyboardShouldPersistTaps='handled' contentContainerStyle={{flexGrow: 1}}>
+                            <Text style={[styles.errText, {opacity: this.state.errPass == true ? 1 : 0}]}>Введите телефон</Text>
+ 
+                            <Text style={[
+                                styles.label,
+                                {
+                                    opacity: this.state.phone == '' ? 0 : 1
+                                }
+                            ]}>
+                                Телефон
+                            </Text>
+                            <TextInput keyboardType="numeric" placeholder="Телефон" style={[styles.itemForm]} 
+                            onChange={(text) => { 
+                                this.setState({ phone: text.nativeEvent.text });
+                            }}
+                            />
+
+                        </View>
                     </View>
+                    </Animated.View>
                     <View style={{ 
                             width: Dimensions.get('window').width, 
                             alignItems: 'center',
                             top: 0
                         }}>
-                        <TouchableOpacity style={styles.btn} onPress={this.signUp}>
-                            <Text style={{color: '#fff'}}>Далее</Text>
+                        <TouchableOpacity style={[styles.btn]} onPress={this.signUp}>
+                            <Text style={{color: '#fff'}}>Подтвердить</Text>
                         </TouchableOpacity>
                     </View>
+                   
                 </View>
             </ScrollView>
         )
@@ -187,7 +316,6 @@ const styles = StyleSheet.create({
         borderBottomWidth: 2,
         borderBottomColor: '#3BD88D',
         width: 238,
-        fontFamily: 'TTCommons-Regular',
         color: '#707070',
         fontSize: 18
     },
@@ -195,12 +323,12 @@ const styles = StyleSheet.create({
         width: 238,
         paddingTop: 10,
         paddingBottom: 10,
-        marginTop: 150,
+        marginTop: 50,
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#3BD88D',
         borderRadius: 27.5,
-        fontFamily: 'TTCommons-Regular',
+        // fontFamily: 'TTCommons-Regular',
         fontSize: 18,
         borderColor: '#ddd',
         borderBottomWidth: 0,
@@ -211,20 +339,23 @@ const styles = StyleSheet.create({
         elevation: 1,
     },
     label: {
-        fontFamily: 'TTCommons-Regular',
+        // fontFamily: 'TTCommons-Regular',
         fontSize: 14,
         color: '#3BD88D'
     },
     errText: {
         color: 'red',
-        fontFamily: 'TTCommons-Regular',
+        // fontFamily: 'TTCommons-Regular',
         fontSize: 14,
     },
     containerBack: {
         paddingTop: 33,
         paddingLeft: 16,
         paddingBottom: 35
-    }
+    },
+    container: {
+        flex: 1,
+    },
 })
 
 export default Register

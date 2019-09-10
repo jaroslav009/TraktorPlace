@@ -3,7 +3,7 @@
     "name": "TraktorPlace",
     "slug": "TraktorPlace",
     "privacy": "public",
-    "sdkVersion": "33.0.0",
+    "sdkVersion": "34.0.0",
     "platforms": [
       "ios",
       "android",
@@ -28,6 +28,8 @@
     },
     "description": "",
     "android": {
+      "package": "com.TraktorPlace.TraktorPlace",
+      "googleServicesFile": "./google-services.json",
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyDd1UmcMXWfT9bU4wPWInnRLjGyLr8ZPEM"

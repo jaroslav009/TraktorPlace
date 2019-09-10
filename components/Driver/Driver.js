@@ -29,11 +29,14 @@ class Driver extends Component {
                 ref={marker => { this.marker = marker }}
                 styles={{ width: 50, height: 50 }}
             >
-                <Image 
-                    source={require('../../assets/images/car.png')} style={{
-                        width: 32,
-                        height: 32
-                    }} />
+                <View style={{
+                    height: 12,
+                    width: 12,
+                    borderRadius: 50,
+                    backgroundColor: '#1C1C1C',
+                    position: 'absolute',
+
+                }}></View>
             </MapView.Marker.Animated>
         )
     }

@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
-import { Text, View, Image, StyleSheet, Dimensions, TouchableOpacity, TextInput, ScrollView } from 'react-native';
+import { Text, View, Image, StyleSheet, Dimensions, TouchableOpacity, TextInput, ScrollView, Alert } from 'react-native';
+import * as firebase from 'firebase';
 
 import Back from '../Back';
 
@@ -7,14 +8,15 @@ import Back from '../Back';
 import Fonts from '../../constants/Fonts';
 // Font
 
+// Indicator
+import LoadIndicator from '../../constants/LoadIndicator';
+// Indicator
+
 // Image
 import logoReg from '../../assets/images/logoReg.png';
 // Image
 
-function validateEmail(email) {
-    var pattern  = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-    return pattern .test(email);
-}
+import validateEmail from '../../functions/validateEmail';
 
 class Register extends Component {
     constructor(props) {
@@ -24,6 +26,8 @@ class Register extends Component {
             errEmail: false,
             password: '',
             errPass: false,
+            load: false,
+            errUser: false
         }
         this.signIn = this.signIn.bind(this);
     }
@@ -31,7 +35,7 @@ class Register extends Component {
     signIn() {
         console.log('this.state.', this.state.password)
         console.log('this.email.', this.state.password.length)
-
+        this.setState({ load: true });
         if(validateEmail(this.state.email) == false) {
             return this.setState({ errEmail: true });
         } else {
@@ -42,9 +46,41 @@ class Register extends Component {
         } else {
             this.setState({ errPass: false });
         }
+        firebase.auth().signInWithEmailAndPassword(this.state.email, this.state.password)
+        .then(() => {
+            firebase.auth().onAuthStateChanged(async (user) => {
+                if(user){
+                    console.log('user logged', user.emailVerified);
+                    if(user.emailVerified == true) {
+                        this.props.navigation.navigate('MainClient');
+                    } else {
+                        // await firebase.auth().signOut();
+                        this.setState({ errVerifyEmail: true, authentication: false, authErr: false });
+                        this.setState({ load: false });
+                        return Alert.alert(
+                            '',
+                            'Подтвердите емеил',
+                            [
+                              {text: 'OK', onPress: () => console.log('OK Pressed')},
+                            ],
+                            {cancelable: false},
+                        );
+                        
+                    }
+                    
+                }
+            })
+        })
+        .catch((err) => {
+            console.log('err', err);
+            this.setState({ load: false, errUser: true });
+        })
     }
 
     render() {
+        if(this.state.load == true) {
+            return <LoadIndicator />
+        }
         return (
             <ScrollView>
                 <Back nav={this.props.navigation} />
@@ -61,6 +97,9 @@ class Register extends Component {
                         <Image source={logoReg} style={{ width: 238, height: 54 }} />
                     </View>
                     <View style={styles.containerForm}>
+                        <View>
+                        <Text style={[styles.errText, {opacity: this.state.errUser == true ? 1 : 0, width: 238}]}>Почта или пароль неверны</Text>
+                        </View>
                         <View style={{ marginTop: 10 }}> 
                             <Text style={[styles.errText, {opacity: this.state.errEmail == true ? 1 : 0}]}>Введите ваш емеил</Text>
                             <Text style={[
@@ -69,7 +108,7 @@ class Register extends Component {
                                     opacity: this.state.email == '' ? 0 : 1
                                 }
                             ]}>
-                                Емеил
+                                Почта
                             </Text>
                             <TextInput placeholder="Почта" style={styles.itemForm} 
                             onChange={(text) => { 
@@ -79,7 +118,7 @@ class Register extends Component {
                             />
                         </View>
                         <View style={{ marginTop: 10 }}> 
-                            <Text style={[styles.errText, {opacity: this.state.errPass == true ? 1 : 0}]}>Пароль должен быть не менее 6 символов</Text>
+                            <Text style={[styles.errText, {opacity: this.state.errPass == true ? 1 : 0, width:  238}]}>Пароль должен быть не менее 6 символов</Text>
                             <Text style={[
                                 styles.label,
                                 {
@@ -97,6 +136,18 @@ class Register extends Component {
                                 this.setState({ password: text.nativeEvent.text, errPass: e });
                             }}
                             />
+                            <View style={{
+                                justifyContent: 'flex-end',
+                                alignItems: 'flex-end',
+                                marginTop: 10
+                            }}>
+                                <Text style={{
+                                    color: '#707070',
+                                    fontSize: 13
+                                }}
+                                onPress={() => this.props.navigation.navigate('ResetPassword')} >Забыл пароль</Text>
+                            </View>
+                            
                         </View>
                     </View>
                     <View style={{ 
@@ -125,7 +176,7 @@ const styles = StyleSheet.create({
         borderBottomWidth: 2,
         borderBottomColor: '#3BD88D',
         width: 238,
-        fontFamily: 'TTCommons-Regular',
+        // fontFamily: 'TTCommons-Regular',
         color: '#707070',
         fontSize: 18
     },
@@ -137,7 +188,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#3BD88D',
         borderRadius: 27.5,
-        fontFamily: 'TTCommons-Regular',
+        // fontFamily: 'TTCommons-Regular',
         fontSize: 18,
         marginBottom: 10,
         elevation: 2
@@ -145,13 +196,13 @@ const styles = StyleSheet.create({
         // position: 'absolute'
     },
     label: {
-        fontFamily: 'TTCommons-Regular',
+        // fontFamily: 'TTCommons-Regular',
         fontSize: 14,
         color: '#3BD88D'
     },
     errText: {
         color: 'red',
-        fontFamily: 'TTCommons-Regular',
+        // fontFamily: 'TTCommons-Regular',
         fontSize: 14,
     }
 })
