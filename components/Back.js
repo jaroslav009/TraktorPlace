@@ -18,8 +18,8 @@ class Back extends Component {
 
 const styles = StyleSheet.create({
     containerBack: {
-        paddingTop: 33,
-        paddingLeft: 16,
+        top: 23,
+        left: 25,
         paddingBottom: 35
     }
 })

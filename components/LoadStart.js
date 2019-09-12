@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import { Text, View, Image, ImageBackground, StyleSheet, Dimensions, Share, TouchableOpacity } from 'react-native';
+import { ActivityIndicator } from 'react-native';
 import * as firebase from 'firebase';
 import { Constants } from 'expo';
 
@@ -45,8 +45,7 @@ class LoadStart extends Component {
     }
 
     render() {
-        console.log('dlg', this.state.load);
-        return <LoadIndicator />
+        return <ActivityIndicator size="large" color="#00ff00" />
    
     }
   

@@ -208,14 +208,14 @@ export default class MechanicHeader extends Component {
 
 const styles = StyleSheet.create({
     header: {
-        paddingTop: 20,
-        paddingBottom: 20,
+        // paddingTop: 20,
+        // paddingBottom: 20,
         flexDirection: 'row',
         justifyContent: 'space-around',
         alignItems: 'center',
         elevation: 5,
         backgroundColor: 'transparent',
-        
+        top: 20,
         zIndex: 1000000
     },
     burger: {

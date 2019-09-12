@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import { AppState, Text, View, Image, Dimensions, TouchableOpacity, TextInput, Animated, Easing, ScrollView, Alert, UIManager, Keyboard } from 'react-native';
+import { AppState, Text, View, Image, Dimensions, TouchableOpacity, TextInput, Animated, Easing, ScrollView, DatePickerIOS, UIManager, Keyboard } from 'react-native';
 import MapView, { Polyline } from 'react-native-maps';
 import * as Permissions from 'expo-permissions';
 import * as Location from 'expo-location';
@@ -7,6 +7,7 @@ import * as firebase from 'firebase';
 import * as Font from 'expo-font';
 import { Avatar, CheckBox } from 'react-native-elements';
 import { Notifications } from 'expo';
+import DateTimePicker from "react-native-modal-datetime-picker";
 
 import SuccessPopUp from '../SuccessPopUp/SuccessPopUp';
 import LoadIndicator from '../../constants/LoadIndicator';
@@ -80,7 +81,9 @@ class MainClient extends Component {
             avatar: '',
             shift: new Animated.Value(0),
             selectMechanic: new Animated.Value(0),
-            popSuccess: false
+            popSuccess: false,
+            showDatePicker: false,
+            chosenDate: new Date()
         }
         this.streetSelect = this.streetSelect.bind(this);
         this.closeStr = this.closeStr.bind(this);
@@ -91,6 +94,8 @@ class MainClient extends Component {
         this.pressDriver = this.pressDriver.bind(this);
         this.chooseDriver = this.chooseDriver.bind(this);
         this.handleAppStateChange = this.handleAppStateChange.bind(this);
+        this.showDatePicker = this.showDatePicker.bind(this);
+        this.setDate = this.setDate.bind(this);
     }
 
     async componentDidMount() {
@@ -203,28 +208,31 @@ class MainClient extends Component {
                     await firebase.database().ref("users").orderByChild("confEmail").equalTo(this.state.email).once("child_added", async (snapshot) => {
                         console.log('snapshot', snapshot.key);
                         console.log('dataloc', dataLoc);
-                        if(this.state.role == 'mechanic') {
-                            firebase.database().ref('positionDriver/' + snapshot.key).set({
-                                latitude: dataLoc.coords.latitude,
-                                longitude: dataLoc.coords.longitude,
-                                latitudeDelta: 0.0922,
-                                longitudeDelta: 0.0421,
-                                description: this.state.description,
-                                priceWork: this.state.priceWork,
-                                timeWork: this.state.timeWork,
-                                uidDriver: snapshot.key,
-                                driverId: snapshot.key,
-                                avatar: this.state.avatar,
-                                rating: this.state.rating == undefined ? 2.5 : this.state.rating,
-                                expeirence: this.state.expeirence == undefined ? '' : this.state.expeirence,
-                                advanced: this.state.advanced == undefined ? '' : this.state.advanced,
-                            }, (error) => {
-                                if (error) {
-                                    console.log('err', error);
-                                } else {
-                                    console.log('Data saved positon');
-                                }
-                            });
+                        if(this.state.latitudeMechanic != dataLoc.coords.latitude && this.state.longitudeMechanic != dataLoc.coords.longitude) {
+                            if(this.state.role == 'mechanic') {
+                                this.setState({ latitudeMechanic: dataLoc.coords.latitude, longitudeMechanic: dataLoc.coords.longitude });
+                                firebase.database().ref('positionDriver/' + snapshot.key).set({
+                                    latitude: dataLoc.coords.latitude,
+                                    longitude: dataLoc.coords.longitude,
+                                    latitudeDelta: 0.0922,
+                                    longitudeDelta: 0.0421,
+                                    description: this.state.description,
+                                    priceWork: this.state.priceWork,
+                                    timeWork: this.state.timeWork,
+                                    uidDriver: snapshot.key,
+                                    driverId: snapshot.key,
+                                    avatar: this.state.avatar,
+                                    rating: this.state.rating == undefined ? 2.5 : this.state.rating,
+                                    expeirence: this.state.expeirence == undefined ? '' : this.state.expeirence,
+                                    advanced: this.state.advanced == undefined ? '' : this.state.advanced,
+                                }, (error) => {
+                                    if (error) {
+                                        console.log('err', error);
+                                    } else {
+                                        console.log('Data saved positon');
+                                    }
+                                });
+                            }
                         }
                         this.setState({ latitude: dataLoc.coords.latitude, longitude: dataLoc.coords.longitude })
                         this.setState({mapRegion: { latitude: dataLoc.coords.latitude, longitude: dataLoc.coords.longitude, latitudeDelta: 0.0922, longitudeDelta: 0.0421 }});
@@ -284,10 +292,24 @@ class MainClient extends Component {
                 easing: Easing.linear
             },
         ).start();
+        Animated.timing(
+            // Animate value over time
+            this.state.modalData, // The value to drive
+            {
+                toValue: 0,
+                duration: 500,
+                easing: Easing.linear
+            },
+        ).start();
         this.setState({ addressForm: true, confirmAddress: this.state.address, dataForm: false });
     }
 
     dataBtn() {
+        const latitude = this.state.mapRegion.latitude;
+        const longitude = this.state.mapRegion.longitude;
+        this.setState({mapRegion: { latitude: latitude, longitude: longitude, latitudeDelta: 1.003, longitudeDelta: 1.0 }});
+        
+        
         if(this.state.marka == '') {
             return this.setState({ errMarka: 'flex' });
         } else {
@@ -312,6 +334,7 @@ class MainClient extends Component {
             },
         ).start();
         this.setState({ chooseMechanic: true, dataForm: true, acceptBtn: true, });
+        
     }
 
     closeStr() {
@@ -354,9 +377,13 @@ class MainClient extends Component {
     }
 
     async chooseDriver() {
-      console.log(this.state.drivers[this.state.keyDriver]);
+      
       let id = makeid(10);
-      console.log(this.state.drivers[this.state.keyDriver].driverId);
+
+      const latitude = this.state.mapRegion.latitude;
+      const longitude = this.state.mapRegion.longitude;
+      this.setState({mapRegion: { latitude: latitude, longitude: longitude, latitudeDelta: 0.0922, longitudeDelta: 0.0421 }});
+      
       
       await firebase.database().ref('zakaz/' + id).set({
           uidDriver: this.state.drivers[this.state.keyDriver].driverId,
@@ -386,7 +413,8 @@ class MainClient extends Component {
           
             this.setState({ popSuccess: true });
             setTimeout(() => {
-            this.setState({ popSuccess: false });
+                this.setState({ popSuccess: false });
+                this.props.navigation.navigate('MyZakaz');
             }, 1000)
       })
       .catch(err => {
@@ -409,8 +437,6 @@ class MainClient extends Component {
       });
 
       await firebase.database().ref('users/' + this.state.drivers[this.state.keyDriver].driverId).once("value", (data) => {
-        console.log('data json driverid123json driverid123json driverid123json driverid123json driverid123json driverid123json driverid123json driverid123json driverid123json driverid123json driverid123', data.toJSON());
-        console.log('data json driverid123json driverid123json driverid123json driverid123json driverid123json driverid123json driverid123json driverid123json driverid123json driverid123json driverid123', data.toJSON().expoToken);
         
         fetch('https://exp.host/--/api/v2/push/send', {
             method: 'POST',
@@ -552,18 +578,28 @@ class MainClient extends Component {
         })
     }
 
+    setDate(newDate) {
+        console.log('newdate', newDate);
+        
+        this.setState({time: newDate});
+    }
+
+    showDatePicker() {
+        this.setState({ showDatePicker: true, })
+    }
+
     render() {
         const { shift } = this.state;
         const { selectMechanic } = this.state;
         const { navigation } = this.props;
-
+        let countTime = 0;
         let count = 0;
         let name = '';
         if(this.state.load == true || this.state.loadFont == false) {
             return <LoadIndicator />
         }
         return (
-            <View style={{flex: 1, height: '100%'}}>
+            <View style={{flex: 1, height: 200, width: Dimensions.get('window').width}}>
                 {/* Success */}
                 <View style={{
                     position: this.state.popSuccess == false ? 'relative' : 'absolute',
@@ -620,10 +656,11 @@ class MainClient extends Component {
                             {this.state.confirmAddress}
                         </Text>
                     }
-                  
+                
                 </View>
                 <MapView
-                    initialRegion={this.state.mapRegion}
+                    // initialRegion={this.state.mapRegion}
+                    region={this.state.mapRegion}
                     showsUserLocation={true}
                     showsCompass={true}
                     rotateEnabled={true}
@@ -642,11 +679,11 @@ class MainClient extends Component {
                         strokeWidth={2}
                     /> : <Polyline
                     coordinates={[
-        { latitude: 37.7896386, longitude: -122.421646 },
-        { latitude: 37.7665248, longitude: -122.4161628 },
-        { latitude: 37.7734153, longitude: -122.4577787 },
-        { latitude: 37.7948605, longitude: -122.4596065 },
-        { latitude: 37.8025259, longitude: -122.4351431 }
+                { latitude: 37.7896386, longitude: -122.421646 },
+                { latitude: 37.7665248, longitude: -122.4161628 },
+                { latitude: 37.7734153, longitude: -122.4577787 },
+                { latitude: 37.7948605, longitude: -122.4596065 },
+                { latitude: 37.8025259, longitude: -122.4351431 }
                     ]}
                     strokeColor="#3BD88D" // fallback for when `strokeColors` is not supported by the map-provider
                     strokeColors={[
@@ -655,7 +692,7 @@ class MainClient extends Component {
                     strokeWidth={3}
                 />
                     }
-                   
+                
                     {
                         this.state.drivers.map((value, key) => {
                             name = 'openDrive'+count;
@@ -687,10 +724,18 @@ class MainClient extends Component {
                                             this.pressDriver(key)
                                         }}
                                     >
-                                        <Image source={car} style={{
+                                        {/* <Image source={car} style={{
                                             width: 20,
                                             height: 20
-                                        }} />
+                                        }} /> */}
+                                        <View style={{
+                                            width: 17,
+                                            height: 17,
+                                            borderRadius: 100,
+                                            backgroundColor: '#ED5565'
+                                        }}>
+
+                                        </View>
 
 
                                     </MapView.Marker.Animated>
@@ -716,28 +761,33 @@ class MainClient extends Component {
                         justifyContent: 'center',
                         alignItems: 'center',
                         top: 80,
+                        zIndex: 10000000,
+                        elevation: 1000000
                     }}>
                         <View style={{
                             backgroundColor: '#fff',
                             width: Dimensions.get('window').width*0.8,
                             padding: 12,
+                            zIndex: 1000000,
+                            elevation: 10000,
+                            position: 'absolute'
                         }}>
                             <View style={{
                                 flexDirection: 'row',
                                 alignItems: 'center'
                             }}>
                                 <View>
-                                  { 
+                                { 
                                     this.state.drivers[this.state.keyDriver] == undefined ? <Avatar rounded title="TP" size="medium" /> :
-                                      this.state.drivers[this.state.keyDriver].avatar == '' ? <Avatar rounded title="TP" size="medium" /> : <Avatar
-                                          rounded
-                                          size="medium"
-                                          source={{
-                                          uri:
-                                              this.state.avatar,
-                                          }}
-                                      />
-                                  }
+                                    this.state.drivers[this.state.keyDriver].avatar == '' ? <Avatar rounded title="TP" size="medium" /> : <Avatar
+                                        rounded
+                                        size="medium"
+                                        source={{
+                                        uri:
+                                            this.state.avatar,
+                                        }}
+                                    />
+                                }
                                 </View>
                                 <View>
                                     <View style={{
@@ -751,7 +801,7 @@ class MainClient extends Component {
                                             borderBottomWidth: 1,
                                             paddingBottom: 5
                                         }}>
-    
+        
                                             <Text style={{
                                                 fontSize: 14,
                                                 opacity: this.state.expeirence == undefined || this.state.expeirence == '' ? 0 : 1
@@ -759,7 +809,7 @@ class MainClient extends Component {
                                                 fontSize: 14,
                                                 color: '#3BD88D',
                                                 fontFamily: 'TTCommons-Medium'
-    
+        
                                             }}> {this.state.expeirence} года</Text></Text>
                                             <View style={{
                                                 flexDirection: 'row',
@@ -803,7 +853,7 @@ class MainClient extends Component {
                                 flexDirection: 'row',
                                 justifyContent: 'space-between',
                                 alignItems: 'center',
-    
+        
                             }}>
                                 <View style={{
                                     justifyContent: 'center'
@@ -817,12 +867,12 @@ class MainClient extends Component {
                                         <Text style={{
                                             fontSize: 9,
                                             fontFamily: 'TTCommons-Medium',
-                                         }}>Примерное время работы:</Text>
+                                        }}>Примерное время работы:</Text>
                                         <Text style={{
                                             fontSize: 9,
                                             fontFamily: 'TTCommons-DemiBold',
                                             marginLeft: 5
-                                         }}>{this.state.showTimeWork} ч.</Text>
+                                        }}>{this.state.showTimeWork} ч.</Text>
                                     </View>
                                     <View style={{
                                         flexDirection: 'row',
@@ -833,31 +883,32 @@ class MainClient extends Component {
                                         <Text style={{
                                             fontSize: 9,
                                             fontFamily: 'TTCommons-Medium',
-                                         }}>Примерная цена работы:</Text>
+                                        }}>Примерная цена работы:</Text>
                                         <Text style={{
                                             fontSize: 9,
                                             fontFamily: 'TTCommons-DemiBold',
                                             marginLeft: 5
-                                         }}>{this.state.showPriceWork} р.</Text>
+                                        }}>{this.state.showPriceWork} р.</Text>
                                     </View>
                                 </View>
                                 <View style={{
-                                  opacity: this.state.acceptBtn == true ? 1 : 0
+                                opacity: this.state.acceptBtn == true ? 1 : 0
                                 }}>
-                                  <TouchableOpacity style={[styles.btn, {
-                                      height: 60,
-                                      width: 90,
-                                      padding: 0,
-                                      borderRadius: 10,
-                                      display: this.state.acceptBtn == true ? 'flex' : 'none'
-                                  }]}
-                                  onPress={() => {
+                                <TouchableOpacity style={[styles.btn, {
+                                    height: 60,
+                                    width: 90,
+                                    padding: 0,
+                                    borderRadius: 10,
+                                    display: this.state.acceptBtn == true ? 'flex' : 'none',
+                                    zIndex: 1000000000
+                                }]}
+                                onPress={() => {
                                     console.log('driver choose');
                                     this.chooseDriver();
-                                  }}
-                                  >
-                                      <Text style={{color: '#fff', fontFamily: 'TTCommons-Black', fontSize: 18, margin: 0}}>Выбрать</Text>
-                                  </TouchableOpacity>
+                                }}
+                                >
+                                    <Text style={{color: '#fff', fontFamily: 'TTCommons-Black', fontSize: 18, margin: 0}}>Выбрать</Text>
+                                </TouchableOpacity>
                                 </View>
                             </View>
                         </View>
@@ -871,7 +922,7 @@ class MainClient extends Component {
                             width: Dimensions.get('window').width,
                             height: Dimensions.get('window').height,
                             zIndex: 100,
-                            position: 'absolute'
+                            position: 'absolute',
                             // backgroundColor: '#333'
                         }}>
 
@@ -933,12 +984,12 @@ class MainClient extends Component {
                 {/* Address form */}
 
                 {/* Data */}
-                <TouchableOpacity style={[styles.where, {
+                {/* <TouchableOpacity style={[styles.where, {
                     display: this.state.addressForm == true && this.state.dataForm == false ? 'flex' : 'none',
                     position: this.state.addressForm == true && this.state.dataForm == false ? 'absolute' : 'relative'
                 }]} onPress={this.dataSelect}>
                     <Text style={{ color: '#737373', textAlign: 'center' }}>Выбор механика</Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
 
                 <Animated.View style={[styles.formWhere, {
                     top: this.state.modalData,
@@ -956,7 +1007,8 @@ class MainClient extends Component {
                         }}>
                             <Text style={{
                                     fontSize: 20,
-                                    textAlign: 'center'
+                                    textAlign: 'center',
+                                    marginTop: 25
                                 }}>{this.state.address}</Text>
                             <View style={[styles.containerInput, {
                                 marginTop: 20
@@ -1035,6 +1087,7 @@ class MainClient extends Component {
                                         this.setState({ typeWork: text.nativeEvent.text })
                                     }} />
                             </View>
+                            
                             <View style={[styles.containerInput, {
                                 flexDirection: 'row',
                                 alignItems: 'center',
@@ -1054,6 +1107,7 @@ class MainClient extends Component {
                                         }}
                                         />
                             </View>
+                            
                             <View style={[styles.containerInput, {
                                 flexDirection: 'row',
                                 zIndex: 1000000,
@@ -1079,13 +1133,15 @@ class MainClient extends Component {
 
                                     {/* Select */}
                             </View>
+                            
                             {/* Select */}
                             <View style={{
                                 position: this.state.openSelect == true ? 'absolute' : 'relative',
                                 display: this.state.openSelect == true ? 'flex' : 'none',
                                 bottom: Dimensions.get('window').height < 600 ? Dimensions.get('window').height*0.30 : Dimensions.get('window').height*0.20,
-                                right: Dimensions.get('window').width<350 ? Dimensions.get('window').width*0.09 : Dimensions.get('window').width*0.2,
-                                zIndex: 100000000000000
+                                right: Dimensions.get('window').width<350 ? Dimensions.get('window').width*0.2 : Dimensions.get('window').width*0.2,
+                                zIndex: 100000000000000,
+                                elevation: 1000,
                             }}>
                                 <View style={styles.triangle}></View>
                                 <View style={styles.contentSelect}>
@@ -1102,6 +1158,7 @@ class MainClient extends Component {
                                                 Ближайшое время
                                             </Text>
                                         </View>
+                                        
                                         <CheckBox
                                         center
                                         checkedIcon='dot-circle-o'
@@ -1113,6 +1170,7 @@ class MainClient extends Component {
                                             this.setState({ checked: !this.state.checked });
                                         }}
                                         />
+
                                     </View>
                                     <View style={{
                                         flexDirection: 'row',
@@ -1128,22 +1186,71 @@ class MainClient extends Component {
                                             </Text>
                                         </View>
                                         <TextInput style={{
-                                            width: 46,
-                                            borderColor: '#3BD88D',
-                                            borderWidth: 1,
-                                            fontSize: 9,
-                                            paddingTop: 5,
-                                            paddingBottom: 5
-                                        }}
-                                        keyboardType="phone-pad"
-                                        placeholder="Дата Время"
-                                        onChange={(text) => {
-                                            if(text != '') {
-                                                this.setState({ checked: false });
-                                            }
-                                            this.setState({ time: text.nativeEvent.text });
-                                        }}
+                                                width: 70,
+                                                borderColor: '#3BD88D',
+                                                borderWidth: 1,
+                                                fontSize: 9,
+                                                height: 30
+                                            }}
+                                            keyboardType="phone-pad"
+                                            placeholder="Дата Время"
+                                            value={this.state.time}
+                                            onChange={(text) => {
+                                                
+                                                if(text != '') {
+                                                    this.setState({ checked: false });
+                                                }
+                                                if(text.nativeEvent.text.length <= 16) {
+                                                    this.setState({ time: text.nativeEvent.text });
+                                                }
+                                                
+                                                if(text.nativeEvent.text == 0) {
+                                                    if(countTime == 1) {
+                                                        this.setState({ time: '' });
+                                                        // countTime = 0;
+                                                    }
+                                                    
+                                                }
+                                                if(text.nativeEvent.text.length == 2) {
+                                                    
+                                                    console.log('time', countTime);
+                                                    if(countTime != 5) {
+                                                        let changeDot = text.nativeEvent.text + '.'
+                                                        this.setState({ time: changeDot });
+                                                        countTime = 1;
+                                                    } else {
+                                                        countTime = 1;
+                                                    }
+                                                }
+                                                if(text.nativeEvent.text.length == 5) {
+                                                    console.log('count 5!! ', text.nativeEvent.text.length);
+                                                    // if(countTime != 6) {
+                                                        let changeDot = text.nativeEvent.text + '.'
+                                                        this.setState({ time: changeDot });
+                                                        countTime = 5;
+                                                    // } else {
+                                                        // countTime = 5;
+                                                    // }
+                                                }
+                                                if(text.nativeEvent.text.length == 10) {
+                                                    console.log('11');
+                                                    
+                                                    this.setState({ time: text.nativeEvent.text + ' ' });
+                                                    countTime = 6
+                                                }
+                                                if(text.nativeEvent.text.length == 13) {
+                                                    this.setState({ time: text.nativeEvent.text + ':' });
+                                                }
+                                            }}
                                         />
+                                        {/* <TouchableOpacity onPress={() => this.showDatePicker()}>
+                                            <Text style={{
+                                                fontFamily: 'TTCommons-DemiBold',
+                                                fontSize: 9,
+                                                alignItems: 'center'
+                                            }}>Выберите время</Text>
+                                        </TouchableOpacity> */}
+                                        
                                     </View>
                                 </View>
                             </View>

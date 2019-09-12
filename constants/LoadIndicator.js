@@ -6,7 +6,7 @@ export default class LoadIndicator extends Component {
     render() {
         return (
             <View style={styles.containerActivity}>
-                <ActivityIndicator />
+                <ActivityIndicator size="large" color="#00ff00" />
             </View>
         )
     }
@@ -18,6 +18,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         height: Dimensions.get('window').height,
-        backgroundColor: '#333'
+        backgroundColor: '#fff'
     }
 })
