@@ -98,7 +98,9 @@ class Feedback extends PureComponent {
 
             return (
                 <ScrollView>
-                    <Back nav={this.props.navigation} />
+                    <View style={{paddingTop: 30}}>
+                        <Back nav={this.props.navigation} />
+                    </View>
                     <View style={{
                         justifyContent: 'center',
                         alignItems: 'center',

@@ -21,12 +21,28 @@ class Logout1 extends PureComponent {
         })
         this.props.fontLoader();
     }
+
+    async logout() {
+        await firebase.auth().onAuthStateChanged( async (user) => {
+
+            if(user) {
+                await firebase.database().ref("users").orderByChild("confEmail").equalTo(user.email).once("child_added", async (snapshot) => {
+                    this.setState({ userKey: snapshot.key })
+                    await firebase.database().ref("positionDriver/"+snapshot.key).remove();
+                    await firebase.auth().signOut();
+                    this.props.navigation.navigate('Logout2');
+                });
+            }
+        });
+        
+    }
+
     render() {
         if(this.state.loadFont == true) {
 
             return (
                 <View>
-                    <View>
+                    <View style={{paddingTop: 30}}>
                         <Back nav={this.props.navigation} />
                     </View>
                     <View style={{
@@ -43,10 +59,7 @@ class Logout1 extends PureComponent {
                             </Text>
                         </View>
 
-                        <TouchableOpacity style={styles.btn} onPress={() => {
-                            firebase.auth().signOut();
-                            this.props.navigation.navigate('Logout2');
-                        }}>
+                        <TouchableOpacity style={styles.btn} onPress={() => this.logout()}>
                             <Text style={{color: '#fff', fontFamily: 'TTCommons-Regular',}}>Да</Text>
                         </TouchableOpacity>
                     </View>

@@ -83,7 +83,9 @@ class Register extends Component {
         }
         return (
             <ScrollView>
-                <Back nav={this.props.navigation} />
+                <View style={{paddingTop: 30}}>
+                    <Back nav={this.props.navigation} />
+                </View>
                 <View style={{
                     minHeight: Dimensions.get('window').height*72/100,
                     justifyContent: 'space-between',
@@ -112,7 +114,6 @@ class Register extends Component {
                             </Text>
                             <TextInput placeholder="Почта" style={styles.itemForm} 
                             onChange={(text) => { 
-                                console.log('text', text.nativeEvent.text)
                                 this.setState({ email: text.nativeEvent.text });
                             }}
                             />
@@ -129,8 +130,6 @@ class Register extends Component {
                             </Text>
                             <TextInput secureTextEntry={true} placeholder="Пароль" style={styles.itemForm} 
                             onChange={(text) => { 
-                                console.log('text', text.nativeEvent.text)
-                                console.log('length', text.nativeEvent.text.length)
                                 let e = false;
                                 if(text.nativeEvent.text.length < 6) e = true
                                 this.setState({ password: text.nativeEvent.text, errPass: e });
@@ -153,7 +152,7 @@ class Register extends Component {
                     <View style={{ 
                         width: Dimensions.get('window').width, 
                         alignItems: 'center',
-                        top: 0,
+                        top: -50,
                     }}>
                         <TouchableOpacity style={styles.btn} onPress={this.signIn}>
                             <Text style={{color: '#fff'}}>Войти</Text>
@@ -167,7 +166,7 @@ class Register extends Component {
 
 const styles = StyleSheet.create({
     containerForm: {
-        marginTop: 0,
+        marginTop: -70,
         width: Dimensions.get('window').width,
         justifyContent: 'center',
         alignItems: 'center',

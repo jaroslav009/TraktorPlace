@@ -184,7 +184,9 @@ class Register extends Component {
 
         return (
             <ScrollView style={{ height: Dimensions.get('window').height }}>
-                <Back nav={this.props.navigation} />
+                <View style={{paddingTop: 30}}>
+                    <Back nav={this.props.navigation} />
+                </View>
                 <View style={{
                     minHeight: Dimensions.get('window').height*90/100,
                     justifyContent: 'space-between',
