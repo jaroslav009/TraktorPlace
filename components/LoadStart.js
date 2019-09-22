@@ -32,8 +32,6 @@ class LoadStart extends Component {
                     
                     if(user.emailVerified == true) {
                         this.props.navigation.navigate('MainClient');
-                    } else {
-                        this.props.navigation.navigate('HeroScreen');
                     }
                 } else {
                     this.props.navigation.navigate('HeroScreen');
