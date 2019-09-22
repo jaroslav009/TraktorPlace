@@ -40,7 +40,8 @@ class Help extends Component {
                     <View style={{
                         flexDirection: 'row',
                         alignItems: 'center',
-                        paddingBottom: 20
+                        paddingBottom: 20,
+                        paddingTop: 30
                     }}>
                         <Back nav={this.props.navigation} />
                     </View>  

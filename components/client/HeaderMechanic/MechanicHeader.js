@@ -99,7 +99,7 @@ export default class MechanicHeader extends Component {
                           <TouchableOpacity style={{
                               backgroundColor: '#3BD88D',
                               padding: 30,
-                              paddingTop: 30,
+                              paddingTop: 50,
                               height: 250,
                               zIndex: 1000000000
                           }}
@@ -196,7 +196,7 @@ export default class MechanicHeader extends Component {
                       position: this.state.open == false ? 'absolute' : 'relative',
                       display: this.state.open == false ? 'flex' : 'none'
                   }]}>
-                      <TouchableHighlight style={{ alignSelf: 'center', padding: 15, zIndex: 100000 }} onPress={() => this._openMenu() }>
+                      <TouchableHighlight style={{ alignSelf: 'center', padding: 15, zIndex: 100000, backgroundColor: '#3BD88D', borderRadius: 50 }} onPress={() => this._openMenu() }>
                           <Image source={burger} style={styles.burger} />
                       </TouchableHighlight>
                   </View>
@@ -208,8 +208,9 @@ export default class MechanicHeader extends Component {
 
 const styles = StyleSheet.create({
     header: {
-        // paddingTop: 20,
+        paddingTop: 50,
         // paddingBottom: 20,
+        paddingLeft: 15,
         flexDirection: 'row',
         justifyContent: 'space-around',
         alignItems: 'center',

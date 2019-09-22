@@ -217,6 +217,7 @@ class MyZakaz extends Component {
                         flexDirection: 'row',
                         alignItems: 'center',
                         paddingBottom: 20,
+                        paddingTop: 30,
                         justifyContent: 'space-between'
                     }}>
                         <View style={{

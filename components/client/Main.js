@@ -83,7 +83,9 @@ class MainClient extends Component {
             selectMechanic: new Animated.Value(0),
             popSuccess: false,
             showDatePicker: false,
-            chosenDate: new Date()
+            chosenDate: new Date(),
+            lengDdriver: 0,
+            newZakaz: false,
         }
         this.streetSelect = this.streetSelect.bind(this);
         this.closeStr = this.closeStr.bind(this);
@@ -96,13 +98,14 @@ class MainClient extends Component {
         this.handleAppStateChange = this.handleAppStateChange.bind(this);
         this.showDatePicker = this.showDatePicker.bind(this);
         this.setDate = this.setDate.bind(this);
+        this._handleNotification = this._handleNotification.bind(this);
     }
 
     async componentDidMount() {
 
         this.registerForPushNotificationsAsync();
             
-        // Notifications.addListener(this.listenerNotific)
+        this._notificationSubscription = Notifications.addListener(this._handleNotification);
 
         AppState.addEventListener('change', this.handleAppStateChange);
         const { navigation } = this.props;
@@ -125,8 +128,6 @@ class MainClient extends Component {
         .catch(err => {
             console.log('err', err);
         });
-
-
 
         // Driver
         await firebase.auth().onAuthStateChanged( async (user) => {
@@ -160,9 +161,10 @@ class MainClient extends Component {
                         
                     });
                 })
-            } else {
-                this.props.navigation.navigate('HomeScreen');
-            }
+            } 
+            // else {
+            //     this.props.navigation.navigate('HomeScreen');
+            // }
         });
         await this._getLocationAsync();
         
@@ -176,6 +178,7 @@ class MainClient extends Component {
             let arrBoof = [];
             let count = 0;
             let name = '';
+            this.setState({ lengDdriver: keySnappshot.length });
             keySnappshot.map((value, key) => {
                 console.log('descroiption:', snapshot.val()[value].description);
 
@@ -189,6 +192,14 @@ class MainClient extends Component {
         });
         this.setState({ load: false });
         // Driver
+    }
+    
+    _handleNotification(notification) {
+        this.setState({ newZakaz: notification })
+        console.log('GET_PRODUCT _handleNotification');
+        setTimeout(() => {
+            this.setState({newZakaz: false});
+        }, 6000)
     }
     
     _getLocationAsync = async () => {
@@ -437,6 +448,8 @@ class MainClient extends Component {
       });
 
       await firebase.database().ref('users/' + this.state.drivers[this.state.keyDriver].driverId).once("value", (data) => {
+        console.log('this.state.drivers[this.state.keyDriver].driverId', this.state.drivers[this.state.keyDriver].driverId);
+        console.log('data.toJSON().expoToken', data.toJSON().expoToken);
         
         fetch('https://exp.host/--/api/v2/push/send', {
             method: 'POST',
@@ -601,7 +614,7 @@ class MainClient extends Component {
         return (
             <View style={{flex: 1, height: 200, width: Dimensions.get('window').width}}>
                 {/* Success */}
-                <View style={{
+                {/* <View style={{
                     position: this.state.popSuccess == false ? 'relative' : 'absolute',
                     display: this.state.popSuccess == false ? 'none' : 'flex',
                     right: 0,
@@ -609,8 +622,10 @@ class MainClient extends Component {
                     zIndex: 1000000000000
                 }}>
                     <SuccessPopUp text="Информация о заявке находится в Мои заказы" color="#EBEBEB" />
-                </View>
+                </View> */}
                 {/* Success */}
+
+                
                 <View style={{
                     position: 'absolute',
                     // top: 50,
@@ -618,7 +633,6 @@ class MainClient extends Component {
                     zIndex: 100000,
                     elevation: 1000
                 }}>
-                    
                     {
                         this.state.role == 'mechanic' ? <MechanicHeader 
                         navigation={this.props.navigation} page="Dashboard"
@@ -640,14 +654,24 @@ class MainClient extends Component {
                     zIndex: 1000,
                 }}>
                     {
-                        this.state.acceptBtn == true ? <Text style={{
-                            alignItems: 'center',
-                            fontSize: 20,
-                            justifyContent: 'center',
-                            left: '40%',
-                        }}>
-                            Выберите механика
-                        </Text>
+                        this.state.acceptBtn == true ? <View>
+                            <Text style={{
+                                alignItems: 'center',
+                                fontSize: 20,
+                                justifyContent: 'center',
+                                left: '40%',
+                            }}>
+                                Выберите механика
+                            </Text>
+                            <Text style={{
+                                alignItems: 'center',
+                                fontSize: 20,
+                                justifyContent: 'center',
+                                left: '40%',
+                            }}>
+                                Онлайн: {this.state.lengDdriver}
+                            </Text>
+                        </View>
                         :
                         <Text style={{
                             fontSize: 20,
@@ -747,7 +771,29 @@ class MainClient extends Component {
 
 
                 </MapView>
-
+                {/* Success zakaz */}
+                <View style={{
+                    // right: this.state.newZakaz == false ? 10000000 : 0,
+                    // right: 30,
+                    // top: 50,
+                    // zIndex: 1000000000000,
+                    // elevation: 1000,
+                    // position: 'absolute',
+                    // display: 'flex',
+                    width: 200,
+                    height: 100,
+                    display: 'flex',
+                    position: 'absolute',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    top: 50,
+                    right: this.state.newZakaz == false ? 10000000 : 0,
+                    zIndex: 10000000,
+                    elevation: 1000000
+                }}>
+                    <SuccessPopUp text="Новый заказ" color="#EBEBEB" />
+                </View>
+                {/* Success zakaz */}
                 {/* Data driver */}
                 {
                     this.state.role == 'mechanic' ? <View></View> 
@@ -755,7 +801,6 @@ class MainClient extends Component {
                     <View style={{
                         display: this.state.dataDriver == false ? 'none' : 'flex',
                         position: this.state.dataDriver == false ? 'relative' : 'absolute',
-                        // top: 80,
                         width: Dimensions.get('window').width,
                         height: Dimensions.get('window').height*0.5,
                         justifyContent: 'center',

@@ -213,10 +213,11 @@ class Account extends Component {
                 }}>
                     <View style={{
                         flexDirection: 'row',
-                        alignItems: 'center',
-                        paddingBottom: 20
+                        // alignItems: 'center',
+                        paddingBottom: 20,
+                        paddingTop: 50
                     }}>
-                        <Back nav={this.props.navigation} />
+                        <Back nav={this.props.navigation} style={{ top: 0 }} />
 
                         {/* Success */}
                         <View style={{
@@ -232,7 +233,8 @@ class Account extends Component {
                         <Text style={{
                             fontFamily: 'TTCommons-DemiBold',
                             fontSize: 20,
-                            marginLeft: 30
+                            marginLeft: 30,
+                            // marginTop: 18,
                         }}>Аккаунт</Text>
                     </View>
                     <TouchableOpacity  onPress={() => {

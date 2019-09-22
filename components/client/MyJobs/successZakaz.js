@@ -38,7 +38,7 @@ class successZakaz extends PureComponent {
             return (
                 <View>
                     <TouchableOpacity style={{
-                        paddingTop: 33,
+                        paddingTop: 50,
                         paddingLeft: 16,
                         paddingBottom: 35
                     }}

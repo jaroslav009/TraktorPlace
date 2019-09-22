@@ -51,7 +51,9 @@ class ResetPassword extends Component {
         }
         return (
             <ScrollView>
-                <Back nav={this.props.navigation} />
+                <View style={{paddingTop: 30}}>
+                    <Back nav={this.props.navigation} />
+                </View>
                 <View style={{
                     minHeight: Dimensions.get('window').height*72/100,
                     justifyContent: 'space-between',

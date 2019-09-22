@@ -98,7 +98,7 @@ export default class HeaderClient extends Component {
                           <TouchableOpacity style={{
                               backgroundColor: '#3BD88D',
                               padding: 30,
-                              paddingTop: 30,
+                              paddingTop: 50,
                               height: 250,
                               zIndex: 1000000000
                           }}
@@ -119,7 +119,7 @@ export default class HeaderClient extends Component {
 
                               <View style={styles.containerMenu}>
                                   <View style={{
-                                      marginTop: 10,
+                                      marginTop: 50,
                                       marginBottom: 10
                                   }}>
                                       <Text style={{
@@ -130,19 +130,15 @@ export default class HeaderClient extends Component {
                                           {this.state.phone}
                                       </Text>
                                   </View>
-                                  <TouchableHighlight
-                                      underlayColor="#fff"
-                                      style={{
-                                          zIndex: 100000,
-                                      }}
-                                      onPress={() => {
-                                          this.props.navigation.navigate('Account')
-                                      }}
-                                      >
-                                      <Text style={[styles.darkText,
-                                          {
-                                              fontSize: 17,
-                                              marginTop: 15,
+                                  
+                                  <TouchableHighlight underlayColor="#fff" style={{zIndex: 100000}}
+                                  onPress={() => {
+                                      this.props.navigation.navigate('Account')
+                                  }}
+                                  >
+                                      <Text style={[styles.darkText, {
+                                          fontSize: 17,
+                                          marginTop: 20,
                                           }]}>Аккаунт</Text>
                                   </TouchableHighlight>
 
@@ -193,7 +189,7 @@ export default class HeaderClient extends Component {
                       position: this.state.open == false ? 'absolute' : 'relative',
                       display: this.state.open == false ? 'flex' : 'none'
                   }]}>
-                      <TouchableHighlight style={{ alignSelf: 'center', padding: 15, zIndex: 100000 }} onPress={() => this._openMenu() }>
+                      <TouchableHighlight style={{ alignSelf: 'center', padding: 15, zIndex: 100000, backgroundColor: '#3BD88D', borderRadius: 50 }} onPress={() => this._openMenu() }>
                           <Image source={burger} style={styles.burger} />
                       </TouchableHighlight>
                   </View>
@@ -205,8 +201,9 @@ export default class HeaderClient extends Component {
 
 const styles = StyleSheet.create({
     header: {
-        paddingTop: 20,
-        paddingBottom: 20,
+        paddingTop: 50,
+        // paddingBottom: 20,
+        paddingLeft: 15,
         flexDirection: 'row',
         justifyContent: 'space-around',
         alignItems: 'center',

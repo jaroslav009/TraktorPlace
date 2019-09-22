@@ -33,19 +33,26 @@ class Help extends Component {
         if(this.state.loadFont == true) {
             return (
                 <ScrollView style={{
-                    paddingBottom: 20
+                    paddingBottom: 30
                 }}>
                     <View style={{
                         flexDirection: 'row',
-                        alignItems: 'center',
-                        paddingBottom: 20
+                        // alignItems: 'center',
+                        paddingBottom: 20,
+                        paddingTop: 50
                     }}>
-                        <Back nav={this.props.navigation} />
-                        <Text style={{
-                            fontFamily: 'TTCommons-DemiBold',
-                            fontSize: 20,
-                            marginLeft: 30
-                        }}>Помощь</Text>
+                        <Back nav={this.props.navigation} style={{ top: 0 }} />
+                        <View style={{
+                            paddingLeft: 30
+                        }}>
+                            <Text style={{
+                                fontFamily: 'TTCommons-DemiBold',
+                                fontSize: 20,
+                                marginLeft: 30,
+                                // marginTop: 10
+
+                            }}>Помощь</Text>
+                        </View>
                     </View>  
 
                     <View style={{

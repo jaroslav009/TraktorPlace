@@ -61,7 +61,9 @@ class acceptJob extends PureComponent {
 
             return (
                 <ScrollView>
-                    <Back nav={this.props.navigation} />
+                    <View style={{ paddingTop: 30 }}>
+                        <Back nav={this.props.navigation} />
+                    </View>
                     <View style={{
                         alignItems: 'center'
 

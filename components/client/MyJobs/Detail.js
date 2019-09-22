@@ -98,7 +98,11 @@ export default class Detal extends Component {
         if(this.state.loadFont == true && this.state.load == true) { 
             return (
                 <ScrollView>
-                    <Back nav={this.props.navigation} />
+                    <View style={{
+                        paddingTop: 30,
+                    }}>
+                        <Back nav={this.props.navigation} />
+                    </View>
                     <View style={{
                         justifyContent: 'flex-start',
                         alignItems: 'center',

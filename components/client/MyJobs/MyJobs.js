@@ -227,12 +227,13 @@ class MyJobs extends Component {
         if(this.state.loadFont == true && this.state.load == true) {
             return (
                 <ScrollView style={{
-                    paddingBottom: 20
+                    paddingBottom: 50
                 }}>
                     <View style={{
                         flexDirection: 'row',
                         alignItems: 'center',
                         paddingBottom: 20,
+                        paddingTop: 30,
                         justifyContent: 'space-between'
                     }}>
                         <View style={{

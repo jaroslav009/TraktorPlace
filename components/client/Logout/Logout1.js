@@ -42,7 +42,7 @@ class Logout1 extends PureComponent {
 
             return (
                 <View>
-                    <View>
+                    <View style={{paddingTop: 30}}>
                         <Back nav={this.props.navigation} />
                     </View>
                     <View style={{
