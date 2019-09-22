@@ -104,8 +104,6 @@ class MainClient extends Component {
     async componentDidMount() {
 
         this.registerForPushNotificationsAsync();
-            
-        this._notificationSubscription = Notifications.addListener(this._handleNotification);
 
         AppState.addEventListener('change', this.handleAppStateChange);
         const { navigation } = this.props;
@@ -192,6 +190,19 @@ class MainClient extends Component {
         });
         this.setState({ load: false });
         // Driver
+    }
+
+    componentWillUnmount() {
+        AppState.removeEventListener('change', this.handleAppStateChange);
+
+        this.keyboardDidShowSub.remove();
+        this.keyboardDidHideSub.remove();
+        this._notificationSubscription.remove();
+    }
+    componentWillMount() {
+        this.keyboardDidShowSub = Keyboard.addListener('keyboardDidShow', this.handleKeyboardDidShow);
+        this.keyboardDidHideSub = Keyboard.addListener('keyboardDidHide', this.handleKeyboardDidHide);
+        this._notificationSubscription = Notifications.addListener(this._handleNotification);
     }
     
     _handleNotification(notification) {
@@ -494,15 +505,6 @@ class MainClient extends Component {
     }
 
     // KeyBoard
-    componentWillUnmount() {
-        AppState.removeEventListener('change', this.handleAppStateChange);
-        this.keyboardDidShowSub.remove();
-        this.keyboardDidHideSub.remove();
-    }
-    componentWillMount() {
-        this.keyboardDidShowSub = Keyboard.addListener('keyboardDidShow', this.handleKeyboardDidShow);
-        this.keyboardDidHideSub = Keyboard.addListener('keyboardDidHide', this.handleKeyboardDidHide);
-    }
 
     handleKeyboardDidShow = (event) => {
           console.log('didShow');
@@ -626,14 +628,8 @@ class MainClient extends Component {
                 {/* Success */}
 
                 
-                <View style={{
-                    position: 'absolute',
-                    // top: 50,
-                    // left: 50,
-                    zIndex: 100000,
-                    elevation: 1000
-                }}>
-                    {
+                <View>
+                {
                         this.state.role == 'mechanic' ? <MechanicHeader 
                         navigation={this.props.navigation} page="Dashboard"
                         click={this.handleClickHeader}
@@ -773,13 +769,6 @@ class MainClient extends Component {
                 </MapView>
                 {/* Success zakaz */}
                 <View style={{
-                    // right: this.state.newZakaz == false ? 10000000 : 0,
-                    // right: 30,
-                    // top: 50,
-                    // zIndex: 1000000000000,
-                    // elevation: 1000,
-                    // position: 'absolute',
-                    // display: 'flex',
                     width: 200,
                     height: 100,
                     display: 'flex',
@@ -788,6 +777,7 @@ class MainClient extends Component {
                     alignItems: 'center',
                     top: 50,
                     right: this.state.newZakaz == false ? 10000000 : 0,
+                    // right: 0,
                     zIndex: 10000000,
                     elevation: 1000000
                 }}>

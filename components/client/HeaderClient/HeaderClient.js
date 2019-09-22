@@ -185,10 +185,7 @@ export default class HeaderClient extends Component {
                           </TouchableHighlight>
 
                   </Animated.View>
-                  <View style={[styles.header, {
-                      position: this.state.open == false ? 'absolute' : 'relative',
-                      display: this.state.open == false ? 'flex' : 'none'
-                  }]}>
+                  <View style={styles.header}>
                       <TouchableHighlight style={{ alignSelf: 'center', padding: 15, zIndex: 100000, backgroundColor: '#3BD88D', borderRadius: 50 }} onPress={() => this._openMenu() }>
                           <Image source={burger} style={styles.burger} />
                       </TouchableHighlight>
@@ -201,15 +198,16 @@ export default class HeaderClient extends Component {
 
 const styles = StyleSheet.create({
     header: {
-        paddingTop: 50,
-        // paddingBottom: 20,
+        paddingTop: 20,
+        paddingBottom: 20,
         paddingLeft: 15,
+        display: 'flex',
         flexDirection: 'row',
         justifyContent: 'space-around',
         alignItems: 'center',
         elevation: 5,
         backgroundColor: 'transparent',
-        
+        position: 'absolute',
         zIndex: 1000000
     },
     burger: {
