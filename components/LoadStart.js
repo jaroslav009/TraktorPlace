@@ -26,17 +26,17 @@ class LoadStart extends Component {
     }
     async componentDidMount() {
         await firebase.auth().onAuthStateChanged(async (user) => {
-            setTimeout(() => {
-                if(user){
-                    console.log('auth user', user);
+            if(user){
+                console.log('auth user', user);
+                
+                if(user.emailVerified == true) {
+                    console.log('email verified');
                     
-                    if(user.emailVerified == true) {
-                        this.props.navigation.navigate('MainClient');
-                    }
-                } else {
-                    this.props.navigation.navigate('HeroScreen');
+                    this.props.navigation.navigate('MainClient');
                 }
-            }, 1000)
+            } else {
+                this.props.navigation.navigate('HeroScreen');
+            }
             
         })
         this.setState({ load: false });

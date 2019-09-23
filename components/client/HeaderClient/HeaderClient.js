@@ -23,6 +23,7 @@ export default class HeaderClient extends Component {
     }
 
     async componentDidMount() {
+
         await firebase.auth().onAuthStateChanged(async (user) => {
             if(user) {
                 firebase.database().ref("users").orderByChild("confEmail").equalTo(user.email).once("child_added", (snapshot) => {
@@ -30,9 +31,16 @@ export default class HeaderClient extends Component {
                     firebase.database().ref("users/"+snapshot.key).on("value", (data) => {
                         console.log('value phone', data);
                         console.log('value phone2', data.toJSON().phone);
-                        this.setState({
-                            phone: data.toJSON().phone
-                        });
+                        if(data.toJSON().phone == undefined) {
+                            this.setState({
+                                phone: ''
+                            });
+                        } else {
+                            this.setState({
+                                phone: data.toJSON().phone
+                            });
+                        }
+                        
                     })
                 });
             }

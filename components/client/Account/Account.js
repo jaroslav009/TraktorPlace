@@ -4,6 +4,7 @@ import * as Font from 'expo-font';
 import { Avatar, CheckBox } from 'react-native-elements';
 import * as firebase from 'firebase';
 import * as ImagePicker from 'expo-image-picker';
+import withUnmounted from '@ishawnwang/withunmounted'
 
 import Back from '../../Back';
 import LoadIndicator from '../../../constants/LoadIndicator';
@@ -16,8 +17,11 @@ import settingsWorkTool from '../../../assets/images/settings-work-tool.png';
 import makeid from '../../../functions/makeId';
 
 class Account extends Component {
+    hasUnmounted = false;
+
     constructor(props) {
         super(props);
+        
         this.state = {
             loadFont: false,
             load: false,
@@ -40,16 +44,22 @@ class Account extends Component {
         this.changeData = this.changeData.bind(this);
         this.changePassword = this.changePassword.bind(this);
         this.changeAvatar = this.changeAvatar.bind(this);
+        this._toLogout = this._toLogout.bind(this);
     }
     async componentDidMount() {
+
         await firebase.auth().onAuthStateChanged(async (user) => {
+            if (this.hasUnmounted) {
+                // check hasUnmounted flag
+                return;
+            }
             if(user) {
                 console.log(`user ${user}`);
                 console.log(`email ${user.email}`);
-                firebase.database().ref("users").orderByChild("confEmail").equalTo(user.email).once("child_added", (snapshot) => {
+                await firebase.database().ref("users").orderByChild("confEmail").equalTo(user.email).once("child_added", (snapshot) => {
                     console.log('snapshot', snapshot.key);
                     this.setState({ userKey: snapshot.key })
-                    firebase.database().ref("users/"+snapshot.key).on("value", (data) => {
+                    firebase.database().ref("users/"+snapshot.key).once("value", (data) => {
                         console.log('value', data.toJSON().name);
                         this.setState({ 
                             name: data.toJSON().name,
@@ -67,14 +77,14 @@ class Account extends Component {
                 });
             }
         });
-        // await Font.loadAsync({
-        //   'TTCommons-DemiBold': require('../../../assets/fonts/TTCommons-DemiBold.ttf'),
-        //   'TTCommons-Regular': require('../../../assets/fonts/TTCommons-Regular.ttf'),
-        //   'TTCommons-Bold': require('../../../assets/fonts/TTCommons-Bold.ttf'),
-        // })
-        // .then(() => {
-        //     this.setState({ loadFont: true });
-        // });
+        await Font.loadAsync({
+          'TTCommons-DemiBold': require('../../../assets/fonts/TTCommons-DemiBold.ttf'),
+          'TTCommons-Regular': require('../../../assets/fonts/TTCommons-Regular.ttf'),
+          'TTCommons-Bold': require('../../../assets/fonts/TTCommons-Bold.ttf'),
+        })
+        .then(() => {
+            this.setState({ loadFont: true });
+        });
         this.setState({ loadFont: true });
     }
 
@@ -203,6 +213,14 @@ class Account extends Component {
             console.log('avatar cahnge!!!');
             
         })
+    }
+
+    _toLogout() {
+        if (this.hasUnmounted) {
+            // check hasUnmounted flag
+            return;
+        }
+        this.props.navigation.navigate('Logout1');
     }
 
     render() {
@@ -408,8 +426,7 @@ class Account extends Component {
                             />
                         </View>
                         <TouchableOpacity style={styles.btn} onPress={() => {
-                            
-                            this.props.navigation.navigate('Logout1');
+                            this._toLogout();
                         }}>
                             <Text style={{color: '#fff', fontFamily: 'TTCommons-DemiBold', fontSize: 18}}>Выход</Text>
                         </TouchableOpacity>
@@ -472,4 +489,4 @@ const styles = StyleSheet.create({
     },
 })
 
-export default Account;
+export default withUnmounted(Account);
