@@ -7,7 +7,7 @@ import * as firebase from 'firebase';
 import * as Font from 'expo-font';
 import { Avatar, CheckBox } from 'react-native-elements';
 import { Notifications } from 'expo';
-import DateTimePicker from "react-native-modal-datetime-picker";
+import withUnmounted from '@ishawnwang/withunmounted'
 
 import SuccessPopUp from '../SuccessPopUp/SuccessPopUp';
 import LoadIndicator from '../../constants/LoadIndicator';
@@ -30,8 +30,11 @@ function makeid(length) {
 }
 
 class MainClient extends Component {
+    hasUnmounted = false;
+
     constructor(props) {
         super(props);
+
         this.state = {
             locationResult: null,
             modalStr: new Animated.Value(-300),
@@ -99,22 +102,21 @@ class MainClient extends Component {
         this.showDatePicker = this.showDatePicker.bind(this);
         this.setDate = this.setDate.bind(this);
         this._handleNotification = this._handleNotification.bind(this);
+        this.warchDriver = this.warchDriver.bind(this);
     }
 
     async componentDidMount() {
 
-        this.registerForPushNotificationsAsync();
-            
-        this._notificationSubscription = Notifications.addListener(this._handleNotification);
+        this.registerPushNotificaton = this.registerForPushNotificationsAsync();
 
         AppState.addEventListener('change', this.handleAppStateChange);
         const { navigation } = this.props;
-        console.log('navigation.getParam', navigation.getParam('userLatitude')+1);
+
         this.setState({
             userLatitude: navigation.getParam('userLatitude')+1,
             userLongitude: navigation.getParam('userLongitude')+1
         });
-        console.log('anufe', Dimensions.get('window').height);
+        this.setState({ loadFont: true });
         await Font.loadAsync({
           'TTCommons-DemiBold': require('../../assets/fonts/TTCommons-DemiBold.ttf'),
           'TTCommons-Regular': require('../../assets/fonts/TTCommons-Regular.ttf'),
@@ -131,6 +133,10 @@ class MainClient extends Component {
 
         // Driver
         await firebase.auth().onAuthStateChanged( async (user) => {
+            if (this.hasUnmounted) {
+                // check hasUnmounted flag
+                return;
+            }
 
             if(user) {
                 
@@ -138,10 +144,17 @@ class MainClient extends Component {
                 this.setState({ uid: user.uid, email: user.email, uidDriverUser: user.uid });
                 
                 await firebase.database().ref("users").orderByChild("confEmail").equalTo(this.state.email).once("child_added", async (snapshot) => {
-                    console.log('snapshotUser', snapshot.key);
+                    if (this.hasUnmounted) {
+                        // check hasUnmounted flag
+                        return;
+                    }
                     this.setState({ userKey: snapshot.key });
                     
                     await firebase.database().ref("users/"+this.state.userKey).once("value", async (data) => {
+                        if (this.hasUnmounted) {
+                            // check hasUnmounted flag
+                            return;
+                        }
                         this.setState({
                             description: data.toJSON().description,
                             role: data.toJSON().role,
@@ -153,7 +166,6 @@ class MainClient extends Component {
                             advanced: data.toJSON().advanced,
                             expeirence: data.toJSON().expeirence,
                         });
-                        console.log('log1233213213 role', data.toJSON().role);
                         
                         if(data.toJSON().role == 'mechanic') {
                             await this._getLocationAsync();
@@ -162,15 +174,21 @@ class MainClient extends Component {
                     });
                 })
             } 
-            // else {
-            //     this.props.navigation.navigate('HomeScreen');
-            // }
+            else {
+                this.props.navigation.navigate('HomeScreen');
+            }
         });
+
+
         await this._getLocationAsync();
         
         await firebase.database().ref('positionDriver/').on('value', (snapshot) => {
-            console.log('snapshot ', snapshot.val());
-            
+
+            if (this.hasUnmounted) {
+                // check hasUnmounted flag
+                return;
+            }
+    
             if(snapshot.val() == null) {
                 return;
             }
@@ -181,7 +199,7 @@ class MainClient extends Component {
             this.setState({ lengDdriver: keySnappshot.length });
             keySnappshot.map((value, key) => {
                 console.log('descroiption:', snapshot.val()[value].description);
-
+    
                 arrBoof.push(snapshot.val()[value]);
                 name = 'openDrive'+count;
                 this.setState({ [name]: false });
@@ -193,10 +211,54 @@ class MainClient extends Component {
         this.setState({ load: false });
         // Driver
     }
+
+    warchDriver(snapshot) {
+
+        if (this.hasUnmounted) {
+            // check hasUnmounted flag
+            return;
+        }
+
+        if(snapshot.val() == null) {
+            return;
+        }
+        let keySnappshot = Object.keys(snapshot.val());
+        let arrBoof = [];
+        let count = 0;
+        let name = '';
+        this.setState({ lengDdriver: keySnappshot.length });
+        keySnappshot.map((value, key) => {
+            console.log('descroiption:', snapshot.val()[value].description);
+
+            arrBoof.push(snapshot.val()[value]);
+            name = 'openDrive'+count;
+            this.setState({ [name]: false });
+            count++;
+        });
+        this.setState({ drivers: arrBoof });
+        console.log(this.state.drivers);
+    }
+
+    componentWillUnmount() {
+
+        AppState.removeEventListener('change', this.handleAppStateChange);
+        
+        this.keyboardDidShowSub.remove();
+        this.keyboardDidHideSub.remove();
+        this._notificationSubscription.remove();
+        firebase.database().ref('positionDriver/').off('value', this.warchDriver);
+        // this.registerPushNotificaton.remove();
+    }
+    componentWillMount() {
+        this.keyboardDidShowSub = Keyboard.addListener('keyboardDidShow', this.handleKeyboardDidShow);
+        this.keyboardDidHideSub = Keyboard.addListener('keyboardDidHide', this.handleKeyboardDidHide);
+        this._notificationSubscription = Notifications.addListener(this._handleNotification);
+    }
     
     _handleNotification(notification) {
-        this.setState({ newZakaz: notification })
         console.log('GET_PRODUCT _handleNotification');
+        this.setState({ newZakaz: notification })
+        
         setTimeout(() => {
             this.setState({newZakaz: false});
         }, 6000)
@@ -212,6 +274,11 @@ class MainClient extends Component {
             this.setState({ hasLocationPermissions: true });
         }
         await firebase.auth().onAuthStateChanged( async (user) => {
+            if (this.hasUnmounted) {
+                // check hasUnmounted flag
+                return;
+            }
+
             if(user) {
 
                 await Location.watchPositionAsync({}, async (dataLoc) => {
@@ -252,7 +319,7 @@ class MainClient extends Component {
                 });
               }
             })
-        // let location = await Location.getCurrentPositionAsync({});
+        let location = await Location.getCurrentPositionAsync({});
 
     }
 
@@ -395,7 +462,10 @@ class MainClient extends Component {
       const longitude = this.state.mapRegion.longitude;
       this.setState({mapRegion: { latitude: latitude, longitude: longitude, latitudeDelta: 0.0922, longitudeDelta: 0.0421 }});
       
-      
+      if (this.hasUnmounted) {
+          // check hasUnmounted flag
+          return;
+      }
       await firebase.database().ref('zakaz/' + id).set({
           uidDriver: this.state.drivers[this.state.keyDriver].driverId,
           address: this.state.address,
@@ -448,8 +518,6 @@ class MainClient extends Component {
       });
 
       await firebase.database().ref('users/' + this.state.drivers[this.state.keyDriver].driverId).once("value", (data) => {
-        console.log('this.state.drivers[this.state.keyDriver].driverId', this.state.drivers[this.state.keyDriver].driverId);
-        console.log('data.toJSON().expoToken', data.toJSON().expoToken);
         
         fetch('https://exp.host/--/api/v2/push/send', {
             method: 'POST',
@@ -494,15 +562,6 @@ class MainClient extends Component {
     }
 
     // KeyBoard
-    componentWillUnmount() {
-        AppState.removeEventListener('change', this.handleAppStateChange);
-        this.keyboardDidShowSub.remove();
-        this.keyboardDidHideSub.remove();
-    }
-    componentWillMount() {
-        this.keyboardDidShowSub = Keyboard.addListener('keyboardDidShow', this.handleKeyboardDidShow);
-        this.keyboardDidHideSub = Keyboard.addListener('keyboardDidHide', this.handleKeyboardDidHide);
-    }
 
     handleKeyboardDidShow = (event) => {
           console.log('didShow');
@@ -563,6 +622,10 @@ class MainClient extends Component {
     }
 
     async registerForPushNotificationsAsync() {
+        if (this.hasUnmounted) {
+            // check hasUnmounted flag
+            return;
+        }
         const { status: existingStatus } = await Permissions.getAsync(
           Permissions.NOTIFICATIONS
         );
@@ -631,16 +694,20 @@ class MainClient extends Component {
                     // top: 50,
                     // left: 50,
                     zIndex: 100000,
-                    elevation: 1000
+                    elevation: 1000000000
                 }}>
-                    {
-                        this.state.role == 'mechanic' ? <MechanicHeader 
-                        navigation={this.props.navigation} page="Dashboard"
-                        click={this.handleClickHeader}
-                        style={{ width: '100%', height: this.state.clickHeader == false ? 50 : '100%', position: 'absolute' }} />
-                        : <HeaderClient navigation={this.props.navigation} page="Dashboard"
-                        click={this.handleClickHeader}
-                        style={{ width: '100%', height: this.state.clickHeader == false ? 50 : '100%', position: 'absolute' }} />
+                {
+                        this.state.role == 'mechanic' ? <View>
+                            <MechanicHeader 
+                            navigation={this.props.navigation} page="Dashboard"
+                            click={this.handleClickHeader}
+                            style={{ width: '100%', height: this.state.clickHeader == false ? 50 : '100%', position: 'absolute' }} />
+                        </View>
+                        : <View> 
+                            <HeaderClient navigation={this.props.navigation} page="Dashboard"
+                            click={this.handleClickHeader}
+                            style={{ width: '100%', height: this.state.clickHeader == false ? 50 : '100%', position: 'absolute' }} />
+                        </View>
                     }
 
                 </View>
@@ -773,13 +840,6 @@ class MainClient extends Component {
                 </MapView>
                 {/* Success zakaz */}
                 <View style={{
-                    // right: this.state.newZakaz == false ? 10000000 : 0,
-                    // right: 30,
-                    // top: 50,
-                    // zIndex: 1000000000000,
-                    // elevation: 1000,
-                    // position: 'absolute',
-                    // display: 'flex',
                     width: 200,
                     height: 100,
                     display: 'flex',
@@ -788,6 +848,7 @@ class MainClient extends Component {
                     alignItems: 'center',
                     top: 50,
                     right: this.state.newZakaz == false ? 10000000 : 0,
+                    // right: 0,
                     zIndex: 10000000,
                     elevation: 1000000
                 }}>
@@ -1459,4 +1520,4 @@ const styles = {
     },
 }
 
-export default MainClient;
+export default withUnmounted(MainClient);

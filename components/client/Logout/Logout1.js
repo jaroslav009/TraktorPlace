@@ -3,16 +3,25 @@ import { Text, View, Image, Dimensions, TouchableOpacity, TextInput, Animated, S
 import Back from '../../Back';
 import * as Font from 'expo-font';
 import * as firebase from 'firebase';
+import withUnmounted from '@ishawnwang/withunmounted'
 
 class Logout1 extends PureComponent {
+    hasUnmounted = false;
     constructor(props) {
         super(props);
+
         this.state = {
             loadFont: false,
         }
+        this.logout = this.logout.bind(this);
     }
 
     async componentDidMount() {
+        if (this.hasUnmounted) {
+            // check hasUnmounted flag
+            return;
+        }
+        
         await Font.loadAsync({
           'TTCommons-DemiBold': require('../../../assets/fonts/TTCommons-DemiBold.ttf'),
         })
@@ -22,18 +31,27 @@ class Logout1 extends PureComponent {
         this.props.fontLoader();
     }
 
-    async logout() {
-        await firebase.auth().onAuthStateChanged( async (user) => {
-
-            if(user) {
-                await firebase.database().ref("users").orderByChild("confEmail").equalTo(user.email).once("child_added", async (snapshot) => {
-                    this.setState({ userKey: snapshot.key })
-                    await firebase.database().ref("positionDriver/"+snapshot.key).remove();
-                    await firebase.auth().signOut();
-                    this.props.navigation.navigate('Logout2');
-                });
-            }
-        });
+    logout() {
+        if (this.hasUnmounted) {
+            // check hasUnmounted flag
+            return;
+        }
+        else {
+            firebase.auth().onAuthStateChanged( async (user) => {
+                if (this.hasUnmounted) {
+                    // check hasUnmounted flag
+                    return;
+                }
+                if(user) {
+                    await firebase.database().ref("users").orderByChild("confEmail").equalTo(user.email).once("child_added", async (snapshot) => {
+                        this.setState({ userKey: snapshot.key })
+                        await firebase.database().ref("positionDriver/"+snapshot.key).remove();
+                        await firebase.auth().signOut();
+                        this.props.navigation.navigate('Logout2');
+                    });
+                }
+            });
+        }
         
     }
 
@@ -95,4 +113,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default Logout1;
+export default withUnmounted(Logout1);

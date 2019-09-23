@@ -5,6 +5,7 @@ import * as Font from 'expo-font';
 import { Avatar } from 'react-native-elements';
 import * as firebase from 'firebase';
 import * as ImagePicker from 'expo-image-picker';
+import withUnmounted from '@ishawnwang/withunmounted'
 
 import LoadIndicator from '../../../constants/LoadIndicator'
 import SuccessPopUp from '../../SuccessPopUp/SuccessPopUp';
@@ -12,6 +13,8 @@ import SuccessPopUp from '../../SuccessPopUp/SuccessPopUp';
 import makeid from '../../../functions/makeId';
 
 class AccountMechanic extends PureComponent {
+    hasUnmounted = false;
+
     constructor(props) {
         super(props);
         this.state = {
@@ -31,12 +34,18 @@ class AccountMechanic extends PureComponent {
     async componentDidMount() {
         this.setState({ load: false });
         await firebase.auth().onAuthStateChanged(async (user) => {
+            if (this.hasUnmounted) {
+                // check hasUnmounted flag
+                return;
+            }
+
             if(user) {
                 console.log(`user ${user}`);
                 console.log(`email ${user.email}`);
                 firebase.database().ref("users").orderByChild("confEmail").equalTo(user.email).once("child_added", (snapshot) => {
+                    
                     this.setState({ userKey: snapshot.key })
-                    firebase.database().ref("users/"+snapshot.key).on("value", (data) => {
+                    firebase.database().ref("users/"+snapshot.key).once("value", (data) => {
                         this.setState({ 
                             name: data.toJSON().name,
                             surname: data.toJSON().surname,
@@ -80,12 +89,12 @@ class AccountMechanic extends PureComponent {
         const blob = await response.blob();
         let ref = firebase.storage().ref('avatar').child(imageName);
         await ref.put(blob)
-        .then((res) => {
-            console.log('res', res);
-        });
 
         await ref.getDownloadURL().then((url) => {
-            console.log('url', url)
+            if (this.hasUnmounted) {
+                // check hasUnmounted flag
+                return;
+            }
             this.setState({ avatar: url });
         })
 
@@ -110,6 +119,10 @@ class AccountMechanic extends PureComponent {
             expeirence: this.state.expeirence
         })
         .then(() => {
+            if (this.hasUnmounted) {
+                // check hasUnmounted flag
+                return;
+            }
             this.setState({load: true, popSuccess: true});
             setTimeout(() => {
                 this.setState({ popSuccess: false })
